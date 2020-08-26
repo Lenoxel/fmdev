@@ -19,6 +19,7 @@ import model_copy from './model_copy';
 import download from './download';
 import data_source from './data_source';
 import phenomenon from './phenomenon';
+import prediction from './prediction';
 import { reducer as toastr } from 'react-redux-toastr';
 
 export default history => combineReducers({
@@ -41,5 +42,6 @@ export default history => combineReducers({
   download,
   data_source,
   phenomenon,
+  prediction,
   router: connectRouter(history)
 });

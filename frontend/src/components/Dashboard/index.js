@@ -7,15 +7,53 @@ import { connect } from 'react-redux';
 import PerfectScrollbar from 'react-perfect-scrollbar';
 import { ProgressSpinner } from 'primereact/progressspinner';
 import { Creators as CourseActions } from '../../store/ducks/course';
+import { actions as toastrActions } from 'react-redux-toastr';
 import { Creators as IndicatorActions } from '../../store/ducks/indicator';
 import { Creators as SubjectActions } from '../../store/ducks/subject';
 import { Creators as SemesterActions } from '../../store/ducks/semester';
 import { Creators as PhenomenonActions } from '../../store/ducks/phenomenon';
-import { LeftContent, SelectContainer, Content, Separator } from './styles';
+import { Creators as PredictionActions } from '../../store/ducks/prediction';
+import { LeftContent, SelectContainer, Content, Separator, GraphContainer, FlexItem, CenterContainer } from './styles';
 import Select from 'react-select';
 import Button from '../../styles/Button';
 
+// Com o Plot importado aqui, transferir tudo que está em index.js e styles.js de PredictionChart para cá
+import Plot from 'react-plotly.js';
+
 class Dashboard extends Component {
+  state = {
+    pieChartData: {
+      values: [19, 26, 73],
+      labels: ['Option 1', 'Option 2', 'Option 3'],
+      type: 'pie'
+    },
+    pieChartLayout: {
+      title: 'LAD Pie Chart',
+    },
+    barChartData: {
+      x: ['giraffes', 'orangutans', 'monkeys'],
+      y: [20, 14, 23],
+      type: 'bar'
+    },
+    barChartLayout: {
+      title: 'LAD Bar Chart',
+    },
+    bubbleChartData: {
+      x: [1, 2, 3, 4],
+      y: [10, 11, 12, 13],
+      mode: 'markers',
+      marker: {
+          size: [40, 60, 80, 100]
+      }
+    },
+    bubbleChartlayout: {
+      title: 'Bubble Chart',
+      showlegend: false,
+    },
+    config: {
+      responsive: true
+    },
+  }
 
   componentDidMount() {
     this.props.indicatorInitFilter();
@@ -50,11 +88,87 @@ class Dashboard extends Component {
     }
   };
 
+  renderWarningMsg = (msg) => {
+    this.props.add({
+      type: 'warning',
+      title: 'Atenção',
+      message: msg
+    });
+  }
+
+  onSubmit = () => {
+    let filter = {};
+    // const { setScreen } = this.props;
+    const { phenomenonSelected, courseSelected, subjectSelected, semesterSelected } = this.props.indicator;
+
+    if (!phenomenonSelected || !phenomenonSelected.length) {
+      this.renderWarningMsg('Selecione um fenômeno educacional');
+      return;
+    }
+
+    filter.phenomenon = this.getValueFromSelect(phenomenonSelected);
+    filter.courses = this.getValueFromSelect(courseSelected);
+    filter.subjects = this.getValueFromSelect(subjectSelected);
+    filter.semesters = this.getValueFromSelect(semesterSelected);
+
+    this.props.postPrediction(filter);
+    // setScreen(ADD_TRAIN, PRE_PROCESSING);
+  }
+
+  getValueFromSelect = items => {
+    if (!items) {
+      return null;
+    }
+
+    return items.map(item => item.value);
+  }
+
   render() {
     // const data = [];
     const loading = false;
-    const { course, subject, semester, phenomenon } = this.props;
+    const { course, subject, semester, phenomenon, prediction } = this.props;
     const { courseSelected, subjectSelected, semesterSelected, phenomenonSelected } = this.props.indicator;
+    const { pieChartData, pieChartLayout, config,
+      // barCharData, barChartLayout, bubbleChartData, bubbleChartlayout
+    } = this.state;
+
+    let pieChartDataDynamic, pieChartLayoutDynamic, barChartDataDynamic, barChartLayoutDynamic;
+
+    // Acredito que o ideal é não ter esse if, mas sempre retornar o prediction.data, do Predict.py, no formato correto para o Plot já pegar dele. Ver depois se é possível...
+    if (prediction.data && prediction.data.data) {
+      let countZeros = 0;
+      let countOnes = 0;
+
+      const predictionResult = prediction.data.data;
+      
+      predictionResult.forEach(binaryResult => {
+        if (binaryResult === 0) {
+          countZeros++;
+        } else {
+          countOnes++;
+        }
+      });
+
+      barChartDataDynamic = {
+        x: ['Aprovados', 'Reprovados'],
+        y: [countOnes, countZeros],
+        type: 'bar'
+      };
+
+      barChartLayoutDynamic = {
+        title: 'LAD Bar Chart',
+      };
+
+      pieChartDataDynamic = {
+        values: [countOnes, countZeros],
+        labels: ['Aprovados', 'Reprovados'],
+        type: 'pie',
+      };
+        
+      pieChartLayoutDynamic = {
+        title: 'Desempenho Binário',
+      };
+    }
 
     return (
       <PerfectScrollbar style={{ width: '100%', overflowX: 'auto' }}>
@@ -65,7 +179,6 @@ class Dashboard extends Component {
           </Header>
 
           <Content>
-
 
             <LeftContent>
               <SelectText>Fenômenos Educacionais</SelectText>
@@ -135,22 +248,66 @@ class Dashboard extends Component {
                   options={semester.data.asMutable()} />
               </SelectContainer>
 
-              <Button onClick={() => { }}>Gerar Análise</Button>
+              <Button onClick={this.onSubmit.bind(this)}>Gerar Análise</Button>
 
             </LeftContent>
 
             <Separator>&nbsp;</Separator>
+
+            {/* {prediction.data ?
+             <GraphContainer>
+              <FlexItem>
+                <Plot
+                  data={[
+                    pieChartDataDynamic
+                  ]}
+                  layout={pieChartLayoutDynamic}
+                  config={config}
+                  graphDiv="graph"
+                />
+              </FlexItem>
+              </GraphContainer>
+            : null} */}
+
+            {prediction.data ?
+              <GraphContainer>
+                <FlexItem>
+                  <Plot
+                    data={[
+                      barChartDataDynamic
+                    ]}
+                    layout={barChartLayoutDynamic}
+                    config={config}
+                    graphDiv="graph"
+                  />
+                </FlexItem>
+              </GraphContainer>
+            : null}
+
+            {/* <GraphContainer>
+              <Plot
+                data={[
+                  bubbleChartData
+                ]}
+                layout={bubbleChartlayout}
+                config={config}
+                graphDiv="graph"
+              />
+            </GraphContainer> */}
+
+            {prediction.loading ?
+              <CenterContainer>
+                <LoadingContainer>
+                  <ProgressSpinner style={{ width: '50px', height: '50px' }} strokeWidth="4" fill="#EEEEEE" animationDuration=".5s" />
+                </LoadingContainer>
+              </CenterContainer>
+              : null}
+            
           </Content>
 
           {/* {!data.length && !loading ?
             <StatusMsgContainer> Sem dados para serem exibidos. </StatusMsgContainer>
             : null} */}
-
-          {loading ?
-            <LoadingContainer>
-              <ProgressSpinner style={{ width: '50px', height: '50px' }} strokeWidth="4" fill="#EEEEEE" animationDuration=".5s" />
-            </LoadingContainer>
-            : null}
 
         </ConfigContainer >
       </PerfectScrollbar>
@@ -158,11 +315,12 @@ class Dashboard extends Component {
   }
 }
 
-const mapStateToProps = ({ course, indicator, subject, semester, phenomenon }) => ({ course, indicator, subject, semester, phenomenon });
+const mapStateToProps = ({ course, indicator, subject, semester, phenomenon, prediction }) => ({ course, indicator, subject, semester, phenomenon, prediction });
 
 export default connect(mapStateToProps,
   {
-    ...CourseActions, ...IndicatorActions,
-    ...SemesterActions, ...SubjectActions,
-    ...PhenomenonActions
+    ...toastrActions, ...CourseActions, 
+    ...IndicatorActions, ...SemesterActions, 
+    ...SubjectActions, ...PhenomenonActions,
+    ...PredictionActions
   })(Dashboard);

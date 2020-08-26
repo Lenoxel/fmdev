@@ -6,10 +6,8 @@ import { actions as toastrActions } from 'react-redux-toastr';
 
 export function* getPhenomenon() {
   try {
-    let response;
-
     yield put(Creators.phenomenonRequest());
-    response = yield call(api.get, 'phenomenon');
+    const response = yield call(api.get, 'phenomenon');
 
     yield put(Creators.phenomenonSuccess(response.data));
   } catch (err) {
