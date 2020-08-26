@@ -151,5 +151,6 @@ CREATE TABLE moodle (
     desempenho_classes character varying NOT NULL
 );
 
+/* O arquivo abaixo é pego do drive do grupo de pesquisa: Base de Dados - (Completa) Análise de Desempenho.csv */
 
-COPY moodle FROM '${base_path}' DELIMITER ';' CSV HEADER;
+COPY moodle FROM 'C:\basefmdev.csv' DELIMITER ';' CSV HEADER;

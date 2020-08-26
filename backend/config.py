@@ -13,7 +13,7 @@ else:
 basedir = os.path.abspath(os.path.dirname(__file__))
 SQLALCHEMY_ECHO = False
 SQLALCHEMY_TRACK_MODIFICATIONS = True
-SQLALCHEMY_DATABASE_URI = f"postgresql://{env.str('DB_USER')}:{env.str('DB_PWD')}@{env.str('DB_HOST')}:{env.str('DB_PORT')}/{env.str('DB_NAME')}"
+SQLALCHEMY_DATABASE_URI = f"postgresql://{env.str('DB_USER')}:{env.str('DB_PASSWORD')}@{env.str('DB_HOST')}:{env.str('DB_PORT')}/{env.str('DB_NAME')}"
 JWT_SECRET_KEY = 'secret'
 PRE_PROCESSING_RAW = 'data/pre_processing'
 TRAIN_MODELS = 'data/models'
