@@ -17,11 +17,16 @@ import { LeftContent, SelectContainer, Content, Separator, GraphContainer, FlexI
 import Select from 'react-select';
 import Button from '../../styles/Button';
 
+import { makeStyles } from '@material-ui/core/styles';
+import Tabs from '@material-ui/core/Tabs';
+import Tab from '@material-ui/core/Tab';
+
 // Com o Plot importado aqui, transferir tudo que está em index.js e styles.js de PredictionChart para cá
 import Plot from 'react-plotly.js';
 
 class Dashboard extends Component {
   state = {
+    tabValue: 0,
     pieChartData: {
       values: [19, 26, 73],
       labels: ['Option 1', 'Option 2', 'Option 3'],
@@ -64,6 +69,10 @@ class Dashboard extends Component {
   handleChange = (item, name) => {
     this.props.setIndicator(name, item);
     this.refreshFilters(name, item);
+  };
+
+  handleTabChange = (event, newValue) => {
+    this.setState({ tabValue: newValue });
   };
 
   refreshFilters = (name, item) => {
@@ -129,7 +138,8 @@ class Dashboard extends Component {
     const { course, subject, semester, phenomenon, prediction } = this.props;
     const { courseSelected, subjectSelected, semesterSelected, phenomenonSelected } = this.props.indicator;
     const { pieChartData, pieChartLayout, config,
-      // barCharData, barChartLayout, bubbleChartData, bubbleChartlayout
+      // barCharData, barChartLayout, bubbleChartData, bubbleChartlayout,
+      tabValue
     } = this.state;
 
     let pieChartDataDynamic, pieChartLayoutDynamic, barChartDataDynamic, barChartLayoutDynamic;
@@ -255,6 +265,19 @@ class Dashboard extends Component {
             <Separator>&nbsp;</Separator>
 
             {/* {prediction.data ?
+              <Tabs
+                value={tabValue}
+                indicatorColor="primary"
+                textColor="primary"
+                onChange={this.handleTabChange()}
+                centered
+              >
+                <Tab label="Bar Chart" />
+                <Tab label="Pie Chart" />
+              </Tabs>
+            : null} */}
+
+            {prediction.data ?
              <GraphContainer>
               <FlexItem>
                 <Plot
@@ -267,9 +290,9 @@ class Dashboard extends Component {
                 />
               </FlexItem>
               </GraphContainer>
-            : null} */}
+            : null}
 
-            {prediction.data ?
+            {/* {prediction.data ?
               <GraphContainer>
                 <FlexItem>
                   <Plot
@@ -282,7 +305,7 @@ class Dashboard extends Component {
                   />
                 </FlexItem>
               </GraphContainer>
-            : null}
+            : null} */}
 
             {/* <GraphContainer>
               <Plot
