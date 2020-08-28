@@ -3,8 +3,10 @@ import styled from 'styled-components';
 export const LeftContent = styled.div`
   display: flex;
   flex-direction: column;
-  width: 16vw;
-  max-width: 16vw;
+  width: 22vw;
+  max-width: 22vw;
+  border-style: ridge;
+  padding: 30px;
 `;
 
 export const SelectContainer = styled.div`
@@ -24,6 +26,7 @@ export const Separator = styled.div`
   align-items: center;
   margin-left: 2vw;
   border-left: 2px dotted #000;
+  height: 462px;
 `;
 
 export const GraphContainer = styled.div`
@@ -41,16 +44,8 @@ export const FlexItem = styled.div`
 	padding: 0 10px;
 	text-align: center;
 	font-size: 1.5em;
-  border: 1px solid midnightblue;
-  border-radius: 3px;
-`;
-
-export const CenterContainer = styled.div`
-  display: flex;
-  color: #B9B9B9;
-  font-size: 1.5rem;
-  font-weight: 500;
-  letter-spacing: 0.065em;
-  justify-content: center;
-  margin: 10% auto;
+  border-style: ridge;
+  position: relative;
+  /* border: 1px solid midnightblue;
+  border-radius: 3px; */
 `;

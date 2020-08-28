@@ -13,7 +13,7 @@ import { Creators as SubjectActions } from '../../store/ducks/subject';
 import { Creators as SemesterActions } from '../../store/ducks/semester';
 import { Creators as PhenomenonActions } from '../../store/ducks/phenomenon';
 import { Creators as PredictionActions } from '../../store/ducks/prediction';
-import { LeftContent, SelectContainer, Content, Separator, GraphContainer, FlexItem, CenterContainer } from './styles';
+import { LeftContent, SelectContainer, Content, Separator, GraphContainer, FlexItem } from './styles';
 import Select from 'react-select';
 import Button from '../../styles/Button';
 
@@ -62,6 +62,7 @@ class Dashboard extends Component {
 
   componentDidMount() {
     this.props.indicatorInitFilter();
+    this.props.predictionInit();
     this.props.getPhenomenon();
     this.props.getCourses({ datasource: 'moodle' });
   }
@@ -107,21 +108,19 @@ class Dashboard extends Component {
 
   onSubmit = () => {
     let filter = {};
-    // const { setScreen } = this.props;
     const { phenomenonSelected, courseSelected, subjectSelected, semesterSelected } = this.props.indicator;
 
-    if (!phenomenonSelected || !phenomenonSelected.length) {
+    if (!phenomenonSelected) {
       this.renderWarningMsg('Selecione um fenômeno educacional');
       return;
     }
 
-    filter.phenomenon = this.getValueFromSelect(phenomenonSelected);
+    filter.phenomenon = phenomenonSelected.value;
     filter.courses = this.getValueFromSelect(courseSelected);
     filter.subjects = this.getValueFromSelect(subjectSelected);
     filter.semesters = this.getValueFromSelect(semesterSelected);
 
     this.props.postPrediction(filter);
-    // setScreen(ADD_TRAIN, PRE_PROCESSING);
   }
 
   getValueFromSelect = items => {
@@ -162,11 +161,14 @@ class Dashboard extends Component {
       barChartDataDynamic = {
         x: ['Aprovados', 'Reprovados'],
         y: [countOnes, countZeros],
+        marker:{
+          color: ['green', 'red'],
+        },
         type: 'bar'
       };
 
       barChartLayoutDynamic = {
-        title: 'LAD Bar Chart',
+        title: 'Desempenho Binário',
       };
 
       pieChartDataDynamic = {
@@ -194,7 +196,6 @@ class Dashboard extends Component {
               <SelectText>Fenômenos Educacionais</SelectText>
               <SelectContainer>
                 <Select
-                  isMulti
                   isClearable
                   value={phenomenonSelected}
                   noOptionsMessage={() => 'Sem dados'}
@@ -262,7 +263,7 @@ class Dashboard extends Component {
 
             </LeftContent>
 
-            <Separator>&nbsp;</Separator>
+            {/* <Separator>&nbsp;</Separator> */}
 
             {/* {prediction.data ?
               <Tabs
@@ -277,22 +278,22 @@ class Dashboard extends Component {
               </Tabs>
             : null} */}
 
-            {prediction.data ?
-             <GraphContainer>
-              <FlexItem>
-                <Plot
-                  data={[
-                    pieChartDataDynamic
-                  ]}
-                  layout={pieChartLayoutDynamic}
-                  config={config}
-                  graphDiv="graph"
-                />
-              </FlexItem>
-              </GraphContainer>
-            : null}
-
             {/* {prediction.data ?
+              <GraphContainer>
+                <FlexItem>
+                  <Plot
+                    data={[
+                      pieChartDataDynamic
+                    ]}
+                    layout={pieChartLayoutDynamic}
+                    config={config}
+                    graphDiv="graph"
+                  />
+                </FlexItem>
+              </GraphContainer>
+            : null} */}
+
+            {prediction.data ?
               <GraphContainer>
                 <FlexItem>
                   <Plot
@@ -305,7 +306,7 @@ class Dashboard extends Component {
                   />
                 </FlexItem>
               </GraphContainer>
-            : null} */}
+            : null}
 
             {/* <GraphContainer>
               <Plot
@@ -319,11 +320,11 @@ class Dashboard extends Component {
             </GraphContainer> */}
 
             {prediction.loading ?
-              <CenterContainer>
+              <GraphContainer>
                 <LoadingContainer>
-                  <ProgressSpinner style={{ width: '50px', height: '50px' }} strokeWidth="4" fill="#EEEEEE" animationDuration=".5s" />
+                  <ProgressSpinner style={{ width: '70px', height: '70px' }} strokeWidth="4" fill="#EEEEEE" animationDuration=".5s" />
                 </LoadingContainer>
-              </CenterContainer>
+              </GraphContainer>
               : null}
             
           </Content>
