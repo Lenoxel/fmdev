@@ -111,7 +111,7 @@ class Dashboard extends Component {
     let filter = {};
     const { phenomenonSelected, courseSelected, subjectSelected, semesterSelected } = this.props.indicator;
 
-    if (!phenomenonSelected.label || !phenomenonSelected.value) {
+    if (!phenomenonSelected || !phenomenonSelected.label || !phenomenonSelected.value) {
       this.renderWarningMsg('Selecione um fenômeno educacional');
       return;
     }

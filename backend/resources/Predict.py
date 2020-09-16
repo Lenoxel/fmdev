@@ -50,19 +50,48 @@ class Predict(Resource):
         where_clousure = ""
 
         if payload['courses'] is not None and len(payload['courses']) > 0:
-            where_clousure += f"""("curso" ILIKE '%%{payload['courses'][0]}%%')"""
+            where_clousure += "("
+            for index, course in enumerate(payload['courses']):
+                if index == len(payload['courses']) - 1:
+                    if index > 0:
+                        where_clousure += " or"
+                    where_clousure += f"""("curso" ILIKE '%%{course}%%'))"""
+                elif index == 0:
+                    where_clousure += f"""("curso" ILIKE '%%{course}%%')"""
+                else:
+                    where_clousure += f""" or ("curso" ILIKE '%%{course}%%')"""
 
         if payload['subjects'] is not None and len(payload['subjects']) > 0:
             if len(where_clousure) > 0:
-                where_clousure += f"""AND ("nome_da_disciplina" ILIKE '%%{payload['subjects'][0]}%%')"""
-            else:
-                where_clousure += f"""("nome_da_disciplina" ILIKE '%%{payload['subjects'][0]}%%')"""
+                where_clousure += " AND "
+
+            where_clousure += "("
+
+            for index, subject in enumerate(payload['subjects']):
+                if index == len(payload['subjects']) - 1:
+                    if index > 0:
+                        where_clousure += " or "
+                    where_clousure += f"""("nome_da_disciplina" ILIKE '%%{subject}%%'))"""
+                elif index == 0:
+                    where_clousure += f"""("nome_da_disciplina" ILIKE '%%{subject}%%')"""
+                else:
+                    where_clousure += f""" or ("nome_da_disciplina" ILIKE '%%{subject}%%')"""
 
         if payload['semesters'] is not None and len(payload['semesters']) > 0:
             if len(where_clousure) > 0:
-                where_clousure += f"""AND ("semestre" ILIKE '%%{payload['semesters'][0]}%%')"""
-            else:
-                where_clousure += f"""("semestre" ILIKE '%%{payload['semesters'][0]}%%')"""
+                where_clousure += " AND "
+
+            where_clousure += "("
+
+            for index, semester in enumerate(payload['semesters']):
+                if index == len(payload['semesters']) - 1:
+                    if index > 0:
+                        where_clousure += " or "
+                    where_clousure += f"""("semestre" ILIKE '%%{semester}%%'))"""
+                elif index == 0:
+                    where_clousure += f"""("semestre" ILIKE '%%{semester}%%')"""
+                else:
+                    where_clousure += f""" or ("semestre" ILIKE '%%{semester}%%')"""
 
         # periods = f"""AND ("período" ILIKE "%{payload['periods']}%%")""" if payload['periods'] != None else ''
 
@@ -108,44 +137,3 @@ class Predict(Resource):
         except:
             traceback.print_exc()
             return {"msg": "Error on GET Copy"}, 500
-
-
-    def format_Data(self, data_predicted):
-        countZeros = 0
-        countOnes = 0
-
-        predictionResult = data_predicted
-
-        for uniqueResult in predictionResult:
-            if uniqueResult == 0:
-                countZeros += 1
-            else:
-                countOnes += 1
-
-        barChartDataDynamic = {
-            x: ['Aprovados', 'Reprovados'],
-            y: [countOnes, countZeros],
-            marker: {
-                color: ['green', 'red'],
-            },
-            'type': 'bar'
-        }
-
-        barChartLayoutDynamic = {
-            title: 'Desempenho Binário',
-        }
-
-        pieChartDataDynamic = {
-            values: [countOnes, countZeros],
-            labels: ['Aprovados', 'Reprovados'],
-            'type': 'pie',
-        }
-
-        pieChartLayoutDynamic = {
-            title: 'Desempenho Binário',
-        }
-
-        formatted_predicted_data = {
-            barChartLayoutDynamic,
-            barChartDataDynamic
-        }
