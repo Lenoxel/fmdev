@@ -6,7 +6,7 @@ export const LeftContent = styled.div`
   width: 22vw;
   max-width: 22vw;
   border-style: ridge;
-  padding: 30px;
+  padding: 20px;
 `;
 
 export const SelectContainer = styled.div`
@@ -17,7 +17,7 @@ export const SelectContainer = styled.div`
 export const Content = styled.div`
   display: flex;
   padding-top: 0;
-  margin: 2rem;
+  margin: 1rem 2rem;
 `;
 
 export const Separator = styled.div`

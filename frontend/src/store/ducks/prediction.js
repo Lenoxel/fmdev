@@ -29,8 +29,6 @@ export const success = (state, { data }) => state.merge({ data, loading: false, 
 
 export const error = state => state.merge({ loading: false, error: true });
 
-export const setFilter = (state, { filter }) => state.merge({ filter });
-
 /* Reducers to types */
 
 export default createReducer(INITIAL_STATE, {

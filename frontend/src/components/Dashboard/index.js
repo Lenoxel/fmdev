@@ -69,6 +69,7 @@ class Dashboard extends Component {
 
   handleChange = (item, name) => {
     this.props.setIndicator(name, item);
+    // this.props.predictionInit();
     this.refreshFilters(name, item);
   };
 
@@ -110,7 +111,7 @@ class Dashboard extends Component {
     let filter = {};
     const { phenomenonSelected, courseSelected, subjectSelected, semesterSelected } = this.props.indicator;
 
-    if (!phenomenonSelected) {
+    if (!phenomenonSelected.label || !phenomenonSelected.value) {
       this.renderWarningMsg('Selecione um fenômeno educacional');
       return;
     }
@@ -131,56 +132,78 @@ class Dashboard extends Component {
     return items.map(item => item.value);
   }
 
+  getBarChartDataDynamic = (predictionResult) => {
+    let countZeros = 0;
+    let countOnes = 0;
+
+    predictionResult.forEach(binaryResult => {
+      if (binaryResult === 0) {
+        countZeros++;
+      } else {
+        countOnes++;
+      }
+    });
+
+    const barChartDataDynamic = {
+      x: ['Aprovados', 'Reprovados'],
+      y: [countOnes, countZeros],
+      marker:{
+        color: ['green', 'red'],
+      },
+      type: 'bar'
+    };
+
+    return barChartDataDynamic;
+  }
+
+  getBarChartLayoutDynamic = () => {
+    const barChartLayoutDynamic = {
+      title: 'Desempenho Binário',
+      width: 700, 
+      height: 450,
+    };
+
+    return barChartLayoutDynamic;
+  }
+
+  getPieChartDataDynamic = (predictionResult) => {
+    let countZeros = 0;
+    let countOnes = 0;
+
+    predictionResult.forEach(binaryResult => {
+      if (binaryResult === 0) {
+        countZeros++;
+      } else {
+        countOnes++;
+      }
+    });
+
+    const pieChartDataDynamic = {
+      values: [countOnes, countZeros],
+      labels: ['Aprovados', 'Reprovados'],
+      type: 'pie',
+    };
+
+    return pieChartDataDynamic;
+  }
+
+  getPieChartLayoutDynamic = () => {
+    const pieChartLayoutDynamic = {
+      title: 'Desempenho Binário',
+    };
+
+    return pieChartLayoutDynamic;
+  }
+
   render() {
-    // const data = [];
-    const loading = false;
     const { course, subject, semester, phenomenon, prediction } = this.props;
     const { courseSelected, subjectSelected, semesterSelected, phenomenonSelected } = this.props.indicator;
-    const { pieChartData, pieChartLayout, config,
+    const { 
+      config,
+      // pieChartData, pieChartLayout, 
       // barCharData, barChartLayout, bubbleChartData, bubbleChartlayout,
       tabValue
     } = this.state;
-
-    let pieChartDataDynamic, pieChartLayoutDynamic, barChartDataDynamic, barChartLayoutDynamic;
-
-    // Acredito que o ideal é não ter esse if, mas sempre retornar o prediction.data, do Predict.py, no formato correto para o Plot já pegar dele. Ver depois se é possível...
-    if (prediction.data && prediction.data.data) {
-      let countZeros = 0;
-      let countOnes = 0;
-
-      const predictionResult = prediction.data.data;
-      
-      predictionResult.forEach(binaryResult => {
-        if (binaryResult === 0) {
-          countZeros++;
-        } else {
-          countOnes++;
-        }
-      });
-
-      barChartDataDynamic = {
-        x: ['Aprovados', 'Reprovados'],
-        y: [countOnes, countZeros],
-        marker:{
-          color: ['green', 'red'],
-        },
-        type: 'bar'
-      };
-
-      barChartLayoutDynamic = {
-        title: 'Desempenho Binário',
-      };
-
-      pieChartDataDynamic = {
-        values: [countOnes, countZeros],
-        labels: ['Aprovados', 'Reprovados'],
-        type: 'pie',
-      };
-        
-      pieChartLayoutDynamic = {
-        title: 'Desempenho Binário',
-      };
-    }
 
     return (
       <PerfectScrollbar style={{ width: '100%', overflowX: 'auto' }}>
@@ -283,9 +306,11 @@ class Dashboard extends Component {
                 <FlexItem>
                   <Plot
                     data={[
-                      pieChartDataDynamic
+                      this.getPieChartDataDynamic(prediction.data.data)
                     ]}
-                    layout={pieChartLayoutDynamic}
+                    layout={
+                      this.getPieChartLayoutDynamic(prediction.data.data)
+                    }
                     config={config}
                     graphDiv="graph"
                   />
@@ -298,9 +323,11 @@ class Dashboard extends Component {
                 <FlexItem>
                   <Plot
                     data={[
-                      barChartDataDynamic
+                      this.getBarChartDataDynamic(prediction.data.data)
                     ]}
-                    layout={barChartLayoutDynamic}
+                    layout={
+                      this.getBarChartLayoutDynamic(prediction.data.data)
+                    }
                     config={config}
                     graphDiv="graph"
                   />
@@ -311,9 +338,11 @@ class Dashboard extends Component {
             {/* <GraphContainer>
               <Plot
                 data={[
-                  bubbleChartData
+                  this.getBubbleChartDataDynamic(prediction.data.data)
                 ]}
-                layout={bubbleChartlayout}
+                layout={
+                  this.getBubbleChartlayoutDynamic(prediction.data.data)
+                }
                 config={config}
                 graphDiv="graph"
               />

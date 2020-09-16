@@ -102,7 +102,50 @@ class Predict(Resource):
 
             print(data_predicted)
 
+            # formatted_predicted_data = self.format_data(data_predicted)
+
             return { 'data': data_predicted }
         except:
             traceback.print_exc()
             return {"msg": "Error on GET Copy"}, 500
+
+
+    def format_Data(self, data_predicted):
+        countZeros = 0
+        countOnes = 0
+
+        predictionResult = data_predicted
+
+        for uniqueResult in predictionResult:
+            if uniqueResult == 0:
+                countZeros += 1
+            else:
+                countOnes += 1
+
+        barChartDataDynamic = {
+            x: ['Aprovados', 'Reprovados'],
+            y: [countOnes, countZeros],
+            marker: {
+                color: ['green', 'red'],
+            },
+            'type': 'bar'
+        }
+
+        barChartLayoutDynamic = {
+            title: 'Desempenho Binário',
+        }
+
+        pieChartDataDynamic = {
+            values: [countOnes, countZeros],
+            labels: ['Aprovados', 'Reprovados'],
+            'type': 'pie',
+        }
+
+        pieChartLayoutDynamic = {
+            title: 'Desempenho Binário',
+        }
+
+        formatted_predicted_data = {
+            barChartLayoutDynamic,
+            barChartDataDynamic
+        }
