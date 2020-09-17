@@ -16,6 +16,8 @@ import { Types as DownloadTypes } from '../ducks/download';
 import { Types as DataSourceTypes } from '../ducks/data_source';
 import { Types as PhenomenonTypes } from '../ducks/phenomenon';
 import { Types as PredictionTypes } from '../ducks/prediction';
+import { Types as StudentTypes } from '../ducks/student';
+import { Types as PeriodTypes } from '../ducks/period';
 
 import { getChart } from './chart';
 import { getDownload } from './download';
@@ -34,6 +36,8 @@ import { getPreProcessing, deletePreProcessing } from './pre_processing';
 import { postPrediction } from './prediction';
 import { getDataSource, postDataSource, deleteDataSource } from './data_source';
 import { getPhenomenon } from './phenomenon';
+import { getStudents } from './student';
+import { getPeriods } from './period';
 
 export default function* rootSaga() {
   return yield all([
@@ -63,5 +67,7 @@ export default function* rootSaga() {
     takeLatest(DataSourceTypes.DELETE_DATA_SOURCE, deleteDataSource),
     takeLatest(PhenomenonTypes.GET_PHENOMENON, getPhenomenon),
     takeLatest(PredictionTypes.POST_PREDICTION, postPrediction),
+    takeLatest(StudentTypes.GET_STUDENTS, getStudents),
+    takeLatest(PeriodTypes.GET_PERIODS, getPeriods),
   ])
 }

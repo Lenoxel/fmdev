@@ -20,6 +20,8 @@ from resources.Datasource import Datasource
 from resources.File import File
 from resources.Phenomenon import Phenomenon
 from resources.ModelVariables import ModelVariables
+from resources.Student import Student
+from resources.Period import Period
 
 api_bp = Blueprint('api', __name__)
 api = Api(api_bp)
@@ -45,3 +47,5 @@ api.add_resource(Download, '/download/<string:key>')
 api.add_resource(Datasource, '/data-source', '/data-source/<string:key>')
 api.add_resource(Phenomenon, '/phenomenon')
 api.add_resource(ModelVariables, '/model-variables/<string:key>')
+api.add_resource(Period, '/period')
+api.add_resource(Student, '/student')

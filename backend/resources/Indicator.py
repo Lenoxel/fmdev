@@ -24,7 +24,7 @@ class Indicator(Resource):
                     ORDER BY
                         name
                     """
-
+        
         return utils.execute_query(query)
     
     def get_indicators_by_csv(self):

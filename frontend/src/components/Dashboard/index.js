@@ -13,6 +13,9 @@ import { Creators as SubjectActions } from '../../store/ducks/subject';
 import { Creators as SemesterActions } from '../../store/ducks/semester';
 import { Creators as PhenomenonActions } from '../../store/ducks/phenomenon';
 import { Creators as PredictionActions } from '../../store/ducks/prediction';
+import { Creators as StudentActions } from '../../store/ducks/student';
+import { Creators as PeriodActions } from '../../store/ducks/period';
+
 import { LeftContent, SelectContainer, Content, Separator, GraphContainer, FlexItem } from './styles';
 import Select from 'react-select';
 import Button from '../../styles/Button';
@@ -27,37 +30,38 @@ import Plot from 'react-plotly.js';
 class Dashboard extends Component {
   state = {
     tabValue: 0,
-    pieChartData: {
-      values: [19, 26, 73],
-      labels: ['Option 1', 'Option 2', 'Option 3'],
-      type: 'pie'
-    },
-    pieChartLayout: {
-      title: 'LAD Pie Chart',
-    },
-    barChartData: {
-      x: ['giraffes', 'orangutans', 'monkeys'],
-      y: [20, 14, 23],
-      type: 'bar'
-    },
-    barChartLayout: {
-      title: 'LAD Bar Chart',
-    },
-    bubbleChartData: {
-      x: [1, 2, 3, 4],
-      y: [10, 11, 12, 13],
-      mode: 'markers',
-      marker: {
-          size: [40, 60, 80, 100]
-      }
-    },
-    bubbleChartlayout: {
-      title: 'Bubble Chart',
-      showlegend: false,
-    },
     config: {
       responsive: true
     },
+    isResultShown: false,
+    // pieChartData: {
+    //   values: [19, 26, 73],
+    //   labels: ['Option 1', 'Option 2', 'Option 3'],
+    //   type: 'pie'
+    // },
+    // pieChartLayout: {
+    //   title: 'LAD Pie Chart',
+    // },
+    // barChartData: {
+    //   x: ['giraffes', 'orangutans', 'monkeys'],
+    //   y: [20, 14, 23],
+    //   type: 'bar'
+    // },
+    // barChartLayout: {
+    //   title: 'LAD Bar Chart',
+    // },
+    // bubbleChartData: {
+    //   x: [1, 2, 3, 4],
+    //   y: [10, 11, 12, 13],
+    //   mode: 'markers',
+    //   marker: {
+    //       size: [40, 60, 80, 100]
+    //   }
+    // },
+    // bubbleChartlayout: {
+    //   title: 'Bubble Chart',
+    //   showlegend: false,
+    // },
   }
 
   componentDidMount() {
@@ -65,6 +69,10 @@ class Dashboard extends Component {
     this.props.predictionInit();
     this.props.getPhenomenon();
     this.props.getCourses({ datasource: 'moodle' });
+  }
+
+  showNavbar() {
+    this.setState({isResultShown: !this.state.isResultShown});
   }
 
   handleChange = (item, name) => {
@@ -78,6 +86,8 @@ class Dashboard extends Component {
   };
 
   refreshFilters = (name, item) => {
+    // const { phenomenonSelected, courseSelected, subjectSelected, semesterSelected, periodSelected, studentSelected } = this.props.indicator;
+
     if (name === 'courseSelected') {
 
       if (!item || !item.length) {
@@ -92,10 +102,72 @@ class Dashboard extends Component {
     if (name === 'subjectSelected') {
       if (!item || !item.length) {
         this.props.semesterSuccess([]);
+        this.props.studentSuccess([]);
         return;
       }
 
       this.props.getSemesters({ subjects: item.map(item => item.value) });
+      this.props.getPeriods({ subjects: item.map(item => item.value) });
+      this.props.getStudents({ subjects: item.map(item => item.value) });
+    }
+
+    if (name === 'semesterSelected') {
+      const { subjectSelected } = this.props.indicator;
+
+      let subjects, semesters;
+
+      if ((!item || !item.length) && (!subjectSelected || !subjectSelected.length)) {
+        this.props.periodSuccess([]);
+        this.props.studentSuccess([]);
+        return;
+      } 
+        
+      if (item && item.length) {
+        semesters = item.map(item => item.value);
+      }
+
+      if (subjectSelected && subjectSelected.length) {
+        subjects = subjectSelected.map(item => item.value);
+      }
+
+      this.props.getPeriods({ 
+        subjects,
+        semesters
+      });
+
+      this.props.getStudents({
+        subjects,
+        semesters
+      })
+    }
+
+    if (name === 'periodSelected') {
+      const { subjectSelected, semesterSelected } = this.props.indicator;
+
+      let subjects, semesters, periods;
+
+      if ((!item || !item.length) && (!subjectSelected || !subjectSelected.length) && (!semesterSelected && !semesterSelected.length)) {
+        this.props.studentSuccess([]);
+        return;
+      } 
+        
+      if (item && item.length) {
+        periods = item.map(item => item.value);
+      }
+
+      if (subjectSelected && subjectSelected.length) {
+        subjects = subjectSelected.map(item => item.value);
+      }
+
+      if (semesterSelected && semesterSelected.length) {
+        semesters = semesterSelected.map(item => item.value);
+      }
+
+      this.props.getStudents({
+        subjects,
+        semesters,
+        periods
+      })
     }
   };
 
@@ -109,7 +181,7 @@ class Dashboard extends Component {
 
   onSubmit = () => {
     let filter = {};
-    const { phenomenonSelected, courseSelected, subjectSelected, semesterSelected } = this.props.indicator;
+    const { phenomenonSelected, courseSelected, subjectSelected, semesterSelected, periodSelected, studentSelected } = this.props.indicator;
 
     if (!phenomenonSelected || !phenomenonSelected.label || !phenomenonSelected.value) {
       this.renderWarningMsg('Selecione um fenômeno educacional');
@@ -120,6 +192,8 @@ class Dashboard extends Component {
     filter.courses = this.getValueFromSelect(courseSelected);
     filter.subjects = this.getValueFromSelect(subjectSelected);
     filter.semesters = this.getValueFromSelect(semesterSelected);
+    filter.periods = this.getValueFromSelect(periodSelected);
+    filter.students = this.getValueFromSelect(studentSelected);
 
     this.props.postPrediction(filter);
   }
@@ -196,8 +270,8 @@ class Dashboard extends Component {
   }
 
   render() {
-    const { course, subject, semester, phenomenon, prediction } = this.props;
-    const { courseSelected, subjectSelected, semesterSelected, phenomenonSelected } = this.props.indicator;
+    const { course, subject, semester, phenomenon, prediction, period, student } = this.props;
+    const { courseSelected, subjectSelected, semesterSelected, phenomenonSelected, periodSelected, studentSelected } = this.props.indicator;
     const { 
       config,
       // pieChartData, pieChartLayout, 
@@ -256,7 +330,7 @@ class Dashboard extends Component {
               </SelectContainer>
 
 
-              <SelectText>Turmas</SelectText>
+              <SelectText>Semestres</SelectText>
               <SelectContainer>
                 <Select
                   isMulti
@@ -269,17 +343,30 @@ class Dashboard extends Component {
                   options={semester.data.asMutable()} />
               </SelectContainer>
 
-              <SelectText>Período</SelectText>
+              <SelectText>Períodos</SelectText>
               <SelectContainer>
                 <Select
                   isMulti
                   isClearable
-                  value={semesterSelected}
+                  value={periodSelected}
                   noOptionsMessage={() => 'Sem dados'}
-                  onChange={(e) => this.handleChange(e, 'semesterSelected')}
+                  onChange={(e) => this.handleChange(e, 'periodSelected')}
                   placeholder={'Selecione os Períodos'}
                   styles={selectStyle}
-                  options={semester.data.asMutable()} />
+                  options={period.data.asMutable()} />
+              </SelectContainer>
+
+              <SelectText>Alunos</SelectText>
+              <SelectContainer>
+                <Select
+                  isMulti
+                  isClearable
+                  value={studentSelected}
+                  noOptionsMessage={() => 'Sem dados'}
+                  onChange={(e) => this.handleChange(e, 'studentSelected')}
+                  placeholder={'Selecione os Alunos'}
+                  styles={selectStyle}
+                  options={student.data.asMutable()} />
               </SelectContainer>
 
               <Button onClick={this.onSubmit.bind(this)}>Gerar Análise</Button>
@@ -368,12 +455,13 @@ class Dashboard extends Component {
   }
 }
 
-const mapStateToProps = ({ course, indicator, subject, semester, phenomenon, prediction }) => ({ course, indicator, subject, semester, phenomenon, prediction });
+const mapStateToProps = ({ course, indicator, subject, semester, phenomenon, prediction, period, student }) => ({ course, indicator, subject, semester, phenomenon, prediction, period, student});
 
 export default connect(mapStateToProps,
   {
     ...toastrActions, ...CourseActions, 
     ...IndicatorActions, ...SemesterActions, 
     ...SubjectActions, ...PhenomenonActions,
-    ...PredictionActions
+    ...PredictionActions, ...StudentActions,
+    ...PeriodActions
   })(Dashboard);

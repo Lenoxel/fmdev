@@ -87,13 +87,43 @@ class Predict(Resource):
                 if index == len(payload['semesters']) - 1:
                     if index > 0:
                         where_clousure += " or "
-                    where_clousure += f"""("semestre" ILIKE '%%{semester}%%'))"""
+                    where_clousure += f"""("semestre" = '{semester}'))"""
                 elif index == 0:
-                    where_clousure += f"""("semestre" ILIKE '%%{semester}%%')"""
+                    where_clousure += f"""("semestre" = '{semester}')"""
                 else:
-                    where_clousure += f""" or ("semestre" ILIKE '%%{semester}%%')"""
+                    where_clousure += f""" or ("semestre" = '{semester}')"""
 
-        # periods = f"""AND ("período" ILIKE "%{payload['periods']}%%")""" if payload['periods'] != None else ''
+        if payload['periods'] is not None and len(payload['periods']) > 0:
+            if len(where_clousure) > 0:
+                where_clousure += " AND "
+
+            where_clousure += "("
+
+            for index, period in enumerate(payload['periods']):
+                if index == len(payload['periods']) - 1:
+                    if index > 0:
+                        where_clousure += " or "
+                    where_clousure += f"""("período" = '{period}'))"""
+                elif index == 0:
+                    where_clousure += f"""("período" = '{period}')"""
+                else:
+                    where_clousure += f""" or ("período" = '{period}')"""
+
+        if payload['students'] is not None and len(payload['students']) > 0:
+            if len(where_clousure) > 0:
+                where_clousure += " AND "
+
+            where_clousure += "("
+
+            for index, student in enumerate(payload['students']):
+                if index == len(payload['students']) - 1:
+                    if index > 0:
+                        where_clousure += " or "
+                    where_clousure += f"""("nome_do_aluno" = '{student}'))"""
+                elif index == 0:
+                    where_clousure += f"""("nome_do_aluno" = '{student}')"""
+                else:
+                    where_clousure += f""" or ("nome_do_aluno" = '{student}')"""
 
         query = f"""SELECT
                         {variables}
@@ -102,7 +132,9 @@ class Predict(Resource):
                     WHERE
                         {where_clousure}
                     ORDER BY
-                        "semestre" DESC, "ctid" DESC"""
+                        "nome_do_aluno" DESC, "ctid" DESC"""
+
+        # print(query)
 
         data = utils.execute_query(query)
         return data
@@ -125,13 +157,9 @@ class Predict(Resource):
             x_test = pd.DataFrame(query_select_response) 
             model = self.load_model(filename=key)
             predict = model.predict(x_test)
-
             data_predicted = predict.tolist()
-            TrainModelResource.update_predict(key)
-
             print(data_predicted)
-
-            # formatted_predicted_data = self.format_data(data_predicted)
+            TrainModelResource.update_predict(key)
 
             return { 'data': data_predicted }
         except:
