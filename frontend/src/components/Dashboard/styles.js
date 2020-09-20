@@ -7,6 +7,7 @@ export const LeftContent = styled.div`
   max-width: 22vw;
   border-style: ridge;
   padding: 20px;
+  margin-bottom: 10px;
 `;
 
 export const SelectContainer = styled.div`
@@ -17,7 +18,7 @@ export const SelectContainer = styled.div`
 export const Content = styled.div`
   display: flex;
   padding-top: 0;
-  margin: 1rem 2rem;
+  margin: 0 2rem 1rem;
 `;
 
 export const Separator = styled.div`
@@ -32,6 +33,16 @@ export const Separator = styled.div`
 export const GraphContainer = styled.div`
   max-width: 420px;
 	margin: 0 auto;
+  padding-top: 5px;
+	display: flex;
+  background: aliceblue;
+	justify-content: center;
+	align-items: center;
+`;
+
+export const ExternalLoadingContainer = styled.div`
+  max-width: 420px;
+	margin: 0 auto;
 	display: flex;
   background: white;
 	justify-content: center;
@@ -44,8 +55,12 @@ export const FlexItem = styled.div`
 	padding: 0 10px;
 	text-align: center;
 	font-size: 1.5em;
-  border-style: ridge;
   position: relative;
-  /* border: 1px solid midnightblue;
-  border-radius: 3px; */
+`;
+
+export const TabsContainer = styled.div`
+  flex-grow: 1;
+  background: aliceblue;
+  border-style: ridge;
+  margin: 0 10px 10px
 `;

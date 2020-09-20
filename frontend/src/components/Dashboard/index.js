@@ -16,16 +16,22 @@ import { Creators as PredictionActions } from '../../store/ducks/prediction';
 import { Creators as StudentActions } from '../../store/ducks/student';
 import { Creators as PeriodActions } from '../../store/ducks/period';
 
-import { LeftContent, SelectContainer, Content, Separator, GraphContainer, FlexItem } from './styles';
+import { LeftContent, SelectContainer, Content, Separator, GraphContainer, FlexItem, TabsContainer, ExternalLoadingContainer } from './styles';
 import Select from 'react-select';
 import Button from '../../styles/Button';
 
+import AppBar from '@material-ui/core/AppBar';
 import { makeStyles } from '@material-ui/core/styles';
 import Tabs from '@material-ui/core/Tabs';
 import Tab from '@material-ui/core/Tab';
 
-// Com o Plot importado aqui, transferir tudo que está em index.js e styles.js de PredictionChart para cá
 import Plot from 'react-plotly.js';
+
+const useStyles = makeStyles({
+  root: {
+    flexGrow: 1,
+  },
+});
 
 class Dashboard extends Component {
   state = {
@@ -77,12 +83,7 @@ class Dashboard extends Component {
 
   handleChange = (item, name) => {
     this.props.setIndicator(name, item);
-    // this.props.predictionInit();
     this.refreshFilters(name, item);
-  };
-
-  handleTabChange = (event, newValue) => {
-    this.setState({ tabValue: newValue });
   };
 
   refreshFilters = (name, item) => {
@@ -107,7 +108,7 @@ class Dashboard extends Component {
       }
 
       this.props.getSemesters({ subjects: item.map(item => item.value) });
-      this.props.getPeriods({ subjects: item.map(item => item.value) });
+      // this.props.getPeriods({ subjects: item.map(item => item.value) });
       this.props.getStudents({ subjects: item.map(item => item.value) });
     }
 
@@ -130,10 +131,10 @@ class Dashboard extends Component {
         subjects = subjectSelected.map(item => item.value);
       }
 
-      this.props.getPeriods({ 
-        subjects,
-        semesters
-      });
+      // this.props.getPeriods({ 
+      //   subjects,
+      //   semesters
+      // });
 
       this.props.getStudents({
         subjects,
@@ -234,7 +235,7 @@ class Dashboard extends Component {
     const barChartLayoutDynamic = {
       title: 'Desempenho Binário',
       width: 700, 
-      height: 450,
+      height: 420,
     };
 
     return barChartLayoutDynamic;
@@ -255,6 +256,9 @@ class Dashboard extends Component {
     const pieChartDataDynamic = {
       values: [countOnes, countZeros],
       labels: ['Aprovados', 'Reprovados'],
+      marker:{
+        colors: ['green', 'red'],
+      },
       type: 'pie',
     };
 
@@ -264,10 +268,16 @@ class Dashboard extends Component {
   getPieChartLayoutDynamic = () => {
     const pieChartLayoutDynamic = {
       title: 'Desempenho Binário',
+      width: 700, 
+      height: 420,
     };
 
     return pieChartLayoutDynamic;
   }
+
+  handleTabChange = (event, newValue) => {
+    this.setState({ tabValue: newValue });
+  };
 
   render() {
     const { course, subject, semester, phenomenon, prediction, period, student } = this.props;
@@ -343,7 +353,7 @@ class Dashboard extends Component {
                   options={semester.data.asMutable()} />
               </SelectContainer>
 
-              <SelectText>Períodos</SelectText>
+              {/* <SelectText>Períodos</SelectText>
               <SelectContainer>
                 <Select
                   isMulti
@@ -354,7 +364,7 @@ class Dashboard extends Component {
                   placeholder={'Selecione os Períodos'}
                   styles={selectStyle}
                   options={period.data.asMutable()} />
-              </SelectContainer>
+              </SelectContainer> */}
 
               <SelectText>Alunos</SelectText>
               <SelectContainer>
@@ -372,54 +382,57 @@ class Dashboard extends Component {
               <Button onClick={this.onSubmit.bind(this)}>Gerar Análise</Button>
 
             </LeftContent>
-
+            
             {/* <Separator>&nbsp;</Separator> */}
 
-            {/* {prediction.data ?
-              <Tabs
-                value={tabValue}
-                indicatorColor="primary"
-                textColor="primary"
-                onChange={this.handleTabChange()}
-                centered
-              >
-                <Tab label="Bar Chart" />
-                <Tab label="Pie Chart" />
-              </Tabs>
-            : null} */}
-
-            {/* {prediction.data ?
-              <GraphContainer>
-                <FlexItem>
-                  <Plot
-                    data={[
-                      this.getPieChartDataDynamic(prediction.data.data)
-                    ]}
-                    layout={
-                      this.getPieChartLayoutDynamic(prediction.data.data)
-                    }
-                    config={config}
-                    graphDiv="graph"
-                  />
-                </FlexItem>
-              </GraphContainer>
-            : null} */}
-
             {prediction.data ?
-              <GraphContainer>
-                <FlexItem>
-                  <Plot
-                    data={[
-                      this.getBarChartDataDynamic(prediction.data.data)
-                    ]}
-                    layout={
-                      this.getBarChartLayoutDynamic(prediction.data.data)
-                    }
-                    config={config}
-                    graphDiv="graph"
-                  />
-                </FlexItem>
-              </GraphContainer>
+              <TabsContainer>
+                <Tabs
+                  value={tabValue}
+                  indicatorColor="primary"
+                  textColor="primary"
+                  onChange={this.handleTabChange}
+                  centered
+                >
+                  <Tab label="Geral - Gráfico de barra" />
+                  <Tab label="Geral - Gráfico de pizza" />
+                  <Tab label="Por aluno" />
+                </Tabs>
+
+                {tabValue === 0 ?
+                  <GraphContainer>
+                    <FlexItem>
+                      <Plot
+                        data={[
+                          this.getBarChartDataDynamic(prediction.data.data)
+                        ]}
+                        layout={
+                          this.getBarChartLayoutDynamic(prediction.data.data)
+                        }
+                        config={config}
+                        graphDiv="graph"
+                      />
+                    </FlexItem>
+                  </GraphContainer>
+                : null}
+
+                {tabValue === 1 ?
+                  <GraphContainer>
+                    <FlexItem>
+                      <Plot
+                        data={[
+                          this.getPieChartDataDynamic(prediction.data.data)
+                        ]}
+                        layout={
+                          this.getPieChartLayoutDynamic(prediction.data.data)
+                        }
+                        config={config}
+                        graphDiv="graph"
+                      />
+                    </FlexItem>
+                  </GraphContainer>
+                : null}
+              </TabsContainer>
             : null}
 
             {/* <GraphContainer>
@@ -436,11 +449,11 @@ class Dashboard extends Component {
             </GraphContainer> */}
 
             {prediction.loading ?
-              <GraphContainer>
+              <ExternalLoadingContainer>
                 <LoadingContainer>
                   <ProgressSpinner style={{ width: '70px', height: '70px' }} strokeWidth="4" fill="#EEEEEE" animationDuration=".5s" />
                 </LoadingContainer>
-              </GraphContainer>
+              </ExternalLoadingContainer>
               : null}
             
           </Content>
