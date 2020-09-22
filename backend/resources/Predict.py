@@ -132,12 +132,22 @@ class Predict(Resource):
                     WHERE
                         {where_clousure}
                     ORDER BY
-                        "nome_do_aluno" DESC, "ctid" DESC"""
-
-        # print(query)
+                        "nome_do_aluno" ASC, "ctid" ASC"""
 
         data = utils.execute_query(query)
-        return data
+
+        query_student_names = f"""SELECT
+                        nome_do_aluno
+                    FROM
+                        moodle
+                    WHERE
+                        {where_clousure}
+                    ORDER BY
+                        "nome_do_aluno" ASC, "ctid" ASC"""
+
+        student_names = utils.execute_query(query_student_names)
+
+        return data, student_names
 
 
     def post(self, key):
@@ -152,7 +162,7 @@ class Predict(Resource):
 
             payload = request.get_json()
 
-            query_select_response = self.get_payload(variables, payload)
+            query_select_response, student_names = self.get_payload(variables, payload)
 
             x_test = pd.DataFrame(query_select_response) 
             model = self.load_model(filename=key)
@@ -161,7 +171,7 @@ class Predict(Resource):
             print(data_predicted)
             TrainModelResource.update_predict(key)
 
-            return { 'data': data_predicted }
+            return { 'data': data_predicted, 'student_names': student_names}
         except:
             traceback.print_exc()
             return {"msg": "Error on GET Copy"}, 500

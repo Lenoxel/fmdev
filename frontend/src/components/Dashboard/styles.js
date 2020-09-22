@@ -32,7 +32,7 @@ export const Separator = styled.div`
 
 export const GraphContainer = styled.div`
   max-width: 420px;
-	margin: 0 auto;
+	margin: 10px auto;
   padding-top: 5px;
 	display: flex;
   background: aliceblue;

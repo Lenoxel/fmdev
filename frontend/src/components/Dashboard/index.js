@@ -20,18 +20,10 @@ import { LeftContent, SelectContainer, Content, Separator, GraphContainer, FlexI
 import Select from 'react-select';
 import Button from '../../styles/Button';
 
-import AppBar from '@material-ui/core/AppBar';
-import { makeStyles } from '@material-ui/core/styles';
 import Tabs from '@material-ui/core/Tabs';
 import Tab from '@material-ui/core/Tab';
 
 import Plot from 'react-plotly.js';
-
-const useStyles = makeStyles({
-  root: {
-    flexGrow: 1,
-  },
-});
 
 class Dashboard extends Component {
   state = {
@@ -39,7 +31,11 @@ class Dashboard extends Component {
     config: {
       responsive: true
     },
-    isResultShown: false,
+    chartOptions: [
+      { value: 'bar', label: 'Barra' },
+      { value: 'pie', label: 'Pizza' },
+    ],
+    choosedChart: { value: 'bar', label: 'Barra' },
     // pieChartData: {
     //   values: [19, 26, 73],
     //   labels: ['Option 1', 'Option 2', 'Option 3'],
@@ -75,10 +71,6 @@ class Dashboard extends Component {
     this.props.predictionInit();
     this.props.getPhenomenon();
     this.props.getCourses({ datasource: 'moodle' });
-  }
-
-  showNavbar() {
-    this.setState({isResultShown: !this.state.isResultShown});
   }
 
   handleChange = (item, name) => {
@@ -207,6 +199,40 @@ class Dashboard extends Component {
     return items.map(item => item.value);
   }
 
+  handleTabChange = (event, newValue) => {
+    this.setState({ tabValue: newValue });
+  };
+
+  handleChartChange = (event, value) => {
+    if (event) {
+      this.setState({ 
+        choosedChart: event,
+      });
+    }
+  };
+
+  getChartDataDynamically = () => {
+    const { prediction } = this.props;
+
+    const { choosedChart } = this.state;
+
+    if (choosedChart.value === 'bar') {
+      return this.getBarChartDataDynamic(prediction.data.data);
+    } else if (choosedChart.value === 'pie') {
+      return this.getPieChartDataDynamic(prediction.data.data);
+    }
+  }
+
+  getChartLayoutDynamically = () => {
+    const { choosedChart } = this.state;
+
+    if (choosedChart.value === 'bar') {
+      return this.getBarChartLayoutDynamic();
+    } else if (choosedChart.value === 'pie') {
+      return this.getPieChartLayoutDynamic();
+    }
+  }
+
   getBarChartDataDynamic = (predictionResult) => {
     let countZeros = 0;
     let countOnes = 0;
@@ -275,18 +301,11 @@ class Dashboard extends Component {
     return pieChartLayoutDynamic;
   }
 
-  handleTabChange = (event, newValue) => {
-    this.setState({ tabValue: newValue });
-  };
-
   render() {
     const { course, subject, semester, phenomenon, prediction, period, student } = this.props;
     const { courseSelected, subjectSelected, semesterSelected, phenomenonSelected, periodSelected, studentSelected } = this.props.indicator;
     const { 
-      config,
-      // pieChartData, pieChartLayout, 
-      // barCharData, barChartLayout, bubbleChartData, bubbleChartlayout,
-      tabValue
+      config, tabValue, chartOptions, choosedChart
     } = this.state;
 
     return (
@@ -394,43 +413,39 @@ class Dashboard extends Component {
                   onChange={this.handleTabChange}
                   centered
                 >
-                  <Tab label="Geral - Gráfico de barra" />
-                  <Tab label="Geral - Gráfico de pizza" />
+                  <Tab label="Geral" />
                   <Tab label="Por aluno" />
                 </Tabs>
 
                 {tabValue === 0 ?
                   <GraphContainer>
                     <FlexItem>
-                      <Plot
-                        data={[
-                          this.getBarChartDataDynamic(prediction.data.data)
-                        ]}
-                        layout={
-                          this.getBarChartLayoutDynamic(prediction.data.data)
-                        }
-                        config={config}
-                        graphDiv="graph"
-                      />
+                      <SelectText>Gráfico</SelectText>
+                        <SelectContainer>
+                          <Select
+                            value={choosedChart}
+                            onChange={this.handleChartChange}
+                            placeholder={'Selecione o tipo do gráfico'}
+                            styles={selectStyle}
+                            options={chartOptions} />
+                        </SelectContainer>
+
+                        <Plot
+                          data={[
+                            this.getChartDataDynamically()
+                          ]}
+                          layout={
+                            this.getChartLayoutDynamically()
+                          }
+                          config={config}
+                          graphDiv="graph"
+                        />
                     </FlexItem>
                   </GraphContainer>
                 : null}
 
                 {tabValue === 1 ?
-                  <GraphContainer>
-                    <FlexItem>
-                      <Plot
-                        data={[
-                          this.getPieChartDataDynamic(prediction.data.data)
-                        ]}
-                        layout={
-                          this.getPieChartLayoutDynamic(prediction.data.data)
-                        }
-                        config={config}
-                        graphDiv="graph"
-                      />
-                    </FlexItem>
-                  </GraphContainer>
+                  <div>Gráfico por aluno</div>
                 : null}
               </TabsContainer>
             : null}
@@ -457,10 +472,6 @@ class Dashboard extends Component {
               : null}
             
           </Content>
-
-          {/* {!data.length && !loading ?
-            <StatusMsgContainer> Sem dados para serem exibidos. </StatusMsgContainer>
-            : null} */}
 
         </ConfigContainer >
       </PerfectScrollbar>
