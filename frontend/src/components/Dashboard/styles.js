@@ -10,6 +10,23 @@ export const LeftContent = styled.div`
   margin-bottom: 10px;
 `;
 
+export const LeftContentInside = styled.div`
+  display: flex;
+  flex-direction: column;
+  width: 18vw;
+  max-width: 18vw;
+  padding: 20px;
+  margin-bottom: 10px;
+  margin-top: 25px; 
+  margin-left: 10px; 
+  border-style: outset; 
+  height: 80%
+`;
+
+export const FlexInside = styled.div`
+  display: flex;
+`;
+
 export const SelectContainer = styled.div`
   padding-bottom: 3vh;
   width: 100%;
@@ -35,6 +52,14 @@ export const GraphContainer = styled.div`
 	margin: 10px auto;
   padding-top: 5px;
 	display: flex;
+  background: aliceblue;
+	justify-content: center;
+	align-items: center;
+`;
+
+export const GraphContainerInside = styled.div`
+	margin: 10px auto;
+  padding-top: 5px;
   background: aliceblue;
 	justify-content: center;
 	align-items: center;

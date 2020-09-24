@@ -12,9 +12,17 @@ class Semester(Resource):
             where = ''
             payload = request.get_json()
 
+            if 'courses' in payload and len(payload['courses']) > 0:
+                courses = utils.list_to_sql_string(payload['courses'])
+                where = f"WHERE curso IN ({courses})"
+
             if 'subjects' in payload and len(payload['subjects']) > 0:
                 subjects = utils.list_to_sql_string(payload['subjects'])
-                where = f"WHERE nome_da_disciplina IN ({subjects})"
+
+                if where != '':
+                    where += f" AND nome_da_disciplina IN ({subjects})"
+                else:
+                    where = f"WHERE nome_da_disciplina IN ({subjects})"
 
             query = f"""SELECT 
                             semestre as label, 

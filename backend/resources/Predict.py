@@ -50,98 +50,72 @@ class Predict(Resource):
         where_clousure = ""
 
         if payload['courses'] is not None and len(payload['courses']) > 0:
-            where_clousure += "("
-            for index, course in enumerate(payload['courses']):
-                if index == len(payload['courses']) - 1:
-                    if index > 0:
-                        where_clousure += " or"
-                    where_clousure += f"""("curso" ILIKE '%%{course}%%'))"""
-                elif index == 0:
-                    where_clousure += f"""("curso" ILIKE '%%{course}%%')"""
-                else:
-                    where_clousure += f""" or ("curso" ILIKE '%%{course}%%')"""
+            courses = utils.list_to_sql_string(payload['courses'])
+            where_clousure = f"WHERE curso IN ({courses})"
 
         if payload['subjects'] is not None and len(payload['subjects']) > 0:
-            if len(where_clousure) > 0:
-                where_clousure += " AND "
+            subjects = utils.list_to_sql_string(payload['subjects'])
 
-            where_clousure += "("
-
-            for index, subject in enumerate(payload['subjects']):
-                if index == len(payload['subjects']) - 1:
-                    if index > 0:
-                        where_clousure += " or "
-                    where_clousure += f"""("nome_da_disciplina" ILIKE '%%{subject}%%'))"""
-                elif index == 0:
-                    where_clousure += f"""("nome_da_disciplina" ILIKE '%%{subject}%%')"""
-                else:
-                    where_clousure += f""" or ("nome_da_disciplina" ILIKE '%%{subject}%%')"""
+            if where_clousure != '':
+                where_clousure += f" AND nome_da_disciplina IN ({subjects})"
+            else:
+                where_clousure += f"WHERE nome_da_disciplina IN ({subjects})"
 
         if payload['semesters'] is not None and len(payload['semesters']) > 0:
-            if len(where_clousure) > 0:
-                where_clousure += " AND "
+            semesters = utils.list_to_sql_string(payload['semesters'])
 
-            where_clousure += "("
+            if where_clousure != '':
+                where_clousure += f" AND semestre IN ({semesters})"
+            else:
+                where_clousure += f"WHERE semestre IN ({semesters})"
 
-            for index, semester in enumerate(payload['semesters']):
-                if index == len(payload['semesters']) - 1:
-                    if index > 0:
-                        where_clousure += " or "
-                    where_clousure += f"""("semestre" = '{semester}'))"""
-                elif index == 0:
-                    where_clousure += f"""("semestre" = '{semester}')"""
-                else:
-                    where_clousure += f""" or ("semestre" = '{semester}')"""
 
         if payload['periods'] is not None and len(payload['periods']) > 0:
-            if len(where_clousure) > 0:
-                where_clousure += " AND "
+            periods = utils.list_to_sql_string(payload['periods'])
 
-            where_clousure += "("
-
-            for index, period in enumerate(payload['periods']):
-                if index == len(payload['periods']) - 1:
-                    if index > 0:
-                        where_clousure += " or "
-                    where_clousure += f"""("período" = '{period}'))"""
-                elif index == 0:
-                    where_clousure += f"""("período" = '{period}')"""
-                else:
-                    where_clousure += f""" or ("período" = '{period}')"""
+            if where_clousure != '':
+                where_clousure += f" AND período IN ({periods})"
+            else:
+                where_clousure = f"WHERE período IN ({periods})"
 
         if payload['students'] is not None and len(payload['students']) > 0:
-            if len(where_clousure) > 0:
-                where_clousure += " AND "
+            students = utils.list_to_sql_string(payload['students'])
 
-            where_clousure += "("
+            if where_clousure != '':
+                where_clousure += f" AND nome_do_aluno IN ({students})"
+            else:
+                where_clousure = f"WHERE nome_do_aluno IN ({students})"
 
-            for index, student in enumerate(payload['students']):
-                if index == len(payload['students']) - 1:
-                    if index > 0:
-                        where_clousure += " or "
-                    where_clousure += f"""("nome_do_aluno" = '{student}'))"""
-                elif index == 0:
-                    where_clousure += f"""("nome_do_aluno" = '{student}')"""
-                else:
-                    where_clousure += f""" or ("nome_do_aluno" = '{student}')"""
+            # if len(where_clousure) > 0:
+            #     where_clousure += " AND "
+
+            # where_clousure += "("
+
+            # for index, student in enumerate(payload['students']):
+            #     if index == len(payload['students']) - 1:
+            #         if index > 0:
+            #             where_clousure += " or "
+            #         where_clousure += f"""("nome_do_aluno" = '{student}'))"""
+            #     elif index == 0:
+            #         where_clousure += f"""("nome_do_aluno" = '{student}')"""
+            #     else:
+            #         where_clousure += f""" or ("nome_do_aluno" = '{student}')"""
 
         query = f"""SELECT
                         {variables}
                     FROM
                         moodle
-                    WHERE
-                        {where_clousure}
+                    {where_clousure}
                     ORDER BY
                         "nome_do_aluno" ASC, "ctid" ASC"""
 
         data = utils.execute_query(query)
 
         query_student_names = f"""SELECT
-                        nome_do_aluno
+                        id_do_aluno, nome_do_aluno
                     FROM
                         moodle
-                    WHERE
-                        {where_clousure}
+                    {where_clousure}
                     ORDER BY
                         "nome_do_aluno" ASC, "ctid" ASC"""
 
@@ -162,16 +136,23 @@ class Predict(Resource):
 
             payload = request.get_json()
 
-            query_select_response, student_names = self.get_payload(variables, payload)
+            query_select_response, students = self.get_payload(variables, payload)
 
-            x_test = pd.DataFrame(query_select_response) 
+            x_test = pd.DataFrame(query_select_response)
             model = self.load_model(filename=key)
             predict = model.predict(x_test)
-            data_predicted = predict.tolist()
-            print(data_predicted)
+            predicted_data = predict.tolist()
             TrainModelResource.update_predict(key)
 
-            return { 'data': data_predicted, 'student_names': student_names}
+            real_data = self.format_real_data(students, query_select_response)
+
+            return { 'predictedData': predicted_data, 'realData': real_data}
         except:
             traceback.print_exc()
             return {"msg": "Error on GET Copy"}, 500
+
+
+    def format_real_data(self, students, query_select_response):
+        for index, value_dict in enumerate(query_select_response):
+            value_dict.update(students[index])
+        return query_select_response
