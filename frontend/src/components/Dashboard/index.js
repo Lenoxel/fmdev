@@ -405,7 +405,7 @@ class Dashboard extends Component {
 
     const detailedChartLayout = {
       title: 'Predição do Desempenho Binário por Aluno',
-      width: 700, 
+      width: 580, 
       height: 430,
       font:{
         family: 'Raleway, sans-serif'
@@ -637,7 +637,8 @@ class Dashboard extends Component {
           <Content>
 
             <LeftContent>
-              <SelectText>Fenômenos Educacionais</SelectText>
+              {/* <SelectText>Fenômenos Educacionais</SelectText> */}
+              <SelectText>Modelos Treinados</SelectText>
               <SelectContainer>
                 <Select
                   isClearable

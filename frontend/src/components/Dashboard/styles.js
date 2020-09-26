@@ -58,7 +58,7 @@ export const GraphContainer = styled.div`
 `;
 
 export const GraphContainerInside = styled.div`
-	margin: 10px auto;
+	margin: 10px 3px;
   padding-top: 5px;
   background: aliceblue;
 	justify-content: center;
