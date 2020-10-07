@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+
 import { ConfigContainer } from '../../styles/ConfigContainer';
 import {
   Header, LoadingContainer, SelectText, selectStyle
@@ -23,9 +24,18 @@ import Button from '../../styles/Button';
 import Tabs from '@material-ui/core/Tabs';
 import Tab from '@material-ui/core/Tab';
 
-import Plot from 'react-plotly.js';
-
 import Alert from '@material-ui/lab/Alert';
+
+// simplest method: uses precompiled complete bundle from `plotly.js`
+// import Plot from 'react-plotly.js';
+
+// import Plot from "react-plotly.js";
+import Plotly from "plotly.js-basic-dist";
+
+// customizable method: use your own `Plotly` object
+import createPlotlyComponent from 'react-plotly.js/factory';
+const Plot = createPlotlyComponent(Plotly);
+
 
 class Dashboard extends Component {
   state = {
@@ -39,10 +49,10 @@ class Dashboard extends Component {
     ],
     choosedChart: { value: 'bar', label: 'Barra' },
     detailedOptions: [
-      { value: 'byStudent', label: 'Por aluno' },
-      { value: 'byVariable', label: 'Por variável' },
+      { value: 'byStudent', label: 'Aluno' },
+      { value: 'byVariable', label: 'Variável' },
     ],
-    choosedDetailed: { value: 'byStudent', label: 'Por aluno' },
+    choosedDetailed: { value: 'byStudent', label: 'Aluno' },
     variableOptions: null,
     choosedVariable: null,
     studentOptions: null,
@@ -50,7 +60,7 @@ class Dashboard extends Component {
     detailedChartData: null,
     detailedChartLayout: null,
     loadingChart: false,
-    choosedStudentPrediction: null,
+    predictionInfoText: null,
     mappedVariablesMeaning: {
       'var01': 'Número de diferentes lugares (Endereços IP) de onde o aluno acessou o AVA.',
       'var02': 'Número de mensagens enviadas do aluno ao(s) professor(es) usando o AVA.',
@@ -85,7 +95,7 @@ class Dashboard extends Component {
       'var32d': 'Número de vezes em que o aluno acessou o AVA por período do dia (noites).',
       'var33': 'Número de atividades/atribuições entregues por um aluno dentro do prazo, por curso.',
       'var34': 'Número total de mensagens postadas pelo aluno nos fóruns.',
-      'var35': 'Número de respotas de um professor para perguntas do aluno em fóruns.',
+      'var35': 'Número de respostas de um professor para perguntas do aluno em fóruns.',
     }
   }
 
@@ -245,7 +255,7 @@ class Dashboard extends Component {
       choosedVariable: null,
       studentOptions: null,
       choosedStudent: null,
-      choosedStudentPrediction: null,
+      predictionInfoText: null,
     });
   }
 
@@ -278,7 +288,7 @@ class Dashboard extends Component {
         choosedDetailed: event,
         choosedStudent: null,
         choosedVariable: null,
-        choosedStudentPrediction: null,
+        predictionInfoText: null,
       });
     }
   }
@@ -302,13 +312,13 @@ class Dashboard extends Component {
       } else {
         this.setState({ 
           choosedStudent: event,
-          choosedStudentPrediction: null,
+          predictionInfoText: null,
         });
       }
     } else {
       this.setState({ 
         choosedStudent: event,
-        choosedStudentPrediction: null,
+        predictionInfoText: null,
       });
     }
   }
@@ -332,13 +342,13 @@ class Dashboard extends Component {
       } else {
         this.setState({ 
           choosedVariable: event,
-          choosedStudentPrediction: null,
+          predictionInfoText: null,
         });
       }
     } else {
       this.setState({ 
         choosedVariable: event,
-        choosedStudentPrediction: null,
+        predictionInfoText: null,
       });
     }
   }
@@ -350,7 +360,7 @@ class Dashboard extends Component {
 
     let updatedChoosedStudent;
     let updatedChoosedVariables;
-    let choosedStudentPrediction;
+    let predictionInfoText;
     let choosedStudentVariablesLabelAndValue;
 
     // Essa verificação é importantíssima, pois o estudante pode estar sendo modificado nesse exato momento, logo ele ainda não foi modificado no state.
@@ -366,9 +376,9 @@ class Dashboard extends Component {
 
     for (const [index, uniqueRealData] of prediction.data.realData.entries()) {
       if (uniqueRealData.id_do_aluno === updatedChoosedStudent.value) {
-        choosedStudentVariablesLabelAndValue = uniqueRealData;
+        choosedStudentVariablesLabelAndValue = Object.assign({}, uniqueRealData);
         const studentPredictionResult = prediction.data.predictedData[index];
-        choosedStudentPrediction = studentPredictionResult === 0 ? 'Reprovado' : 'Aprovado';
+        predictionInfoText = studentPredictionResult === 0 ? 'Reprovado' : 'Aprovado';
       }
     }
 
@@ -396,6 +406,7 @@ class Dashboard extends Component {
       y: yValueVariableValues,
       type: 'bar',
       text: textList,
+      // textposition: 'auto',
       marker: {
         color: 'rgb(142,124,195)'
       }
@@ -405,7 +416,7 @@ class Dashboard extends Component {
 
     const detailedChartLayout = {
       title: 'Predição do Desempenho Binário por Aluno',
-      width: 580, 
+      width: 600, 
       height: 430,
       font:{
         family: 'Raleway, sans-serif'
@@ -427,7 +438,7 @@ class Dashboard extends Component {
         detailedChartLayout,
         choosedVariable: choosedDontKnow,
         loadingChart: false,
-        choosedStudentPrediction
+        predictionInfoText
       });
     } else if (changingWhat === 'changingStudent') {
       this.setState({ 
@@ -435,32 +446,112 @@ class Dashboard extends Component {
         detailedChartLayout,
         choosedStudent: choosedDontKnow,
         loadingChart: false,
-        choosedStudentPrediction
+        predictionInfoText
       });
     }
   }
 
   makeDetailedChartByVariable = (choosedDontKnow, changingWhat) => {
     const { 
-      choosedStudent, studentOptions, choosedVariable, variableOptions
+      choosedStudent, studentOptions, choosedVariable, variableOptions, mappedVariablesMeaning
     } = this.state;
 
-    
+    let updatedChoosedStudents;
+    let updatedChoosedVariable;
+    let choosedStudentsInfo = [];
+
+    // Essa verificação é importantíssima, pois a variável pode estar sendo modificada nesse exato momento, logo ela ainda não foi modificada no state.
+    if (changingWhat === 'changingStudent') {
+      updatedChoosedStudents = choosedDontKnow;
+      updatedChoosedVariable = choosedVariable;
+    } else {
+      updatedChoosedStudents = choosedStudent;
+      updatedChoosedVariable = choosedDontKnow;
+    }
+
+    const { prediction } = this.props;
+
+    for (const student of updatedChoosedStudents) {
+      for (const [index, uniqueRealData] of prediction.data.realData.entries()) {
+        if (uniqueRealData.id_do_aluno === student.value) {
+          let studentDataCopy = Object.assign({}, uniqueRealData);
+
+          const studentPredictionResult = prediction.data.predictedData[index];
+          studentDataCopy.binaryPrediction = studentPredictionResult;
+          choosedStudentsInfo.push(studentDataCopy);
+          
+          break;
+        }
+      }
+    }
+
+    const allVariableNames = Object.keys(choosedStudentsInfo[0]);
+
+    let xValueUniqueVariableName = allVariableNames.filter(variableName => variableName === updatedChoosedVariable.label);
+
+    let traces = [];
+
+    for (const choosedStudentInfo of choosedStudentsInfo) {
+      const studentVariableValue = choosedStudentInfo[xValueUniqueVariableName[0]];
+      let yValueStudentInfo = [studentVariableValue];
+
+      const trace = {
+        x: xValueUniqueVariableName,
+        y: yValueStudentInfo,
+        type: 'bar',
+        name: choosedStudentInfo.binaryPrediction === 0 ? 'Reprovado' : 'Aprovado',
+        text: choosedStudentInfo.nome_do_aluno,
+        textposition: 'auto',
+        // hoverinfo: 'none',
+        marker: {
+          color: choosedStudentInfo.binaryPrediction === 0 ? 'red' : 'green',
+          line: {
+            color: 'rgb(8,48,107)',
+            width: 1.5
+          }
+        }
+      };
+
+      traces.push(trace);
+    }
+
+    const detailedChartData = traces;
+
+    const detailedChartLayout = {
+      title: 'Predição do Desempenho Binário por Variável',
+      width: 600, 
+      height: 430,
+    };
+
+    const predictionInfoText = updatedChoosedVariable.label + ' - ' + mappedVariablesMeaning[updatedChoosedVariable.label];
 
     if (changingWhat === 'changingVariable') {
       this.setState({ 
-      //   detailedChartData,
-      //   detailedChartLayout,
+        detailedChartData,
+        detailedChartLayout,
         choosedVariable: choosedDontKnow,
+        loadingChart: false,
+        predictionInfoText,
       });
     } else if (changingWhat === 'changingStudent') {
       this.setState({ 
-        // detailedChartData,
-        // detailedChartLayout,
+        detailedChartData,
+        detailedChartLayout,
         choosedStudent: choosedDontKnow,
+        loadingChart: false,
+        predictionInfoText,
       });
     }
   }
+
+  // getRandomColor = () => {
+  //   const x = Math.floor(Math.random() * 256);
+  //   const y = Math.floor(Math.random() * 256);
+  //   const z = Math.floor(Math.random() * 256);
+  //   const bgColor = 'rgb(" + x + "," + y + "," + z + ")';
+
+  //   return bgColor;
+  // }
 
   getStudentsDynamically = () => {
     const { prediction } = this.props;
@@ -623,7 +714,7 @@ class Dashboard extends Component {
     const { course, subject, semester, phenomenon, prediction, period, student } = this.props;
     const { courseSelected, subjectSelected, semesterSelected, phenomenonSelected, periodSelected, studentSelected } = this.props.indicator;
     const { 
-      config, tabValue, chartOptions, choosedChart, studentOptions, choosedStudent, variableOptions, choosedVariable, detailedOptions, choosedDetailed, detailedChartData, detailedChartLayout, loadingChart, choosedStudentPrediction
+      config, tabValue, chartOptions, choosedChart, studentOptions, choosedStudent, variableOptions, choosedVariable, detailedOptions, choosedDetailed, detailedChartData, detailedChartLayout, loadingChart, predictionInfoText
     } = this.state;
 
     return (
@@ -764,7 +855,7 @@ class Dashboard extends Component {
                 {tabValue === 1 ?
                   <FlexInside>
                     <LeftContentInside>
-                      <SelectText>Detalhar Por</SelectText>
+                      <SelectText>Detalhar por</SelectText>
                       <SelectContainer>
                         <Select
                           value={choosedDetailed}
@@ -796,12 +887,12 @@ class Dashboard extends Component {
                               styles={selectStyle}
                               options={variableOptions} />
                           </SelectContainer>
-                          {choosedStudentPrediction && choosedStudentPrediction === 'Aprovado' ?
+                          {predictionInfoText && predictionInfoText === 'Aprovado' ?
                               <Alert variant="outlined" severity="success">
                               Predição: Aprovado
                               </Alert>
                           : null}
-                          {choosedStudentPrediction && choosedStudentPrediction === 'Reprovado' ?
+                          {predictionInfoText && predictionInfoText === 'Reprovado' ?
                               <Alert variant="outlined" severity="error">
                               Predição: Reprovado
                               </Alert>
@@ -832,6 +923,11 @@ class Dashboard extends Component {
                               styles={selectStyle}
                               options={variableOptions} />
                           </SelectContainer>
+                          {predictionInfoText ?
+                              <Alert variant="outlined" severity="info">
+                              {predictionInfoText}
+                              </Alert>
+                          : null}
                         </div>
                       : null}
                     </LeftContentInside>

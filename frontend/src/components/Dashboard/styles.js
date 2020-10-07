@@ -3,8 +3,8 @@ import styled from 'styled-components';
 export const LeftContent = styled.div`
   display: flex;
   flex-direction: column;
-  width: 22vw;
-  max-width: 22vw;
+  width: 20vw;
+  max-width: 20vw;
   border-style: ridge;
   padding: 20px;
   margin-bottom: 10px;
@@ -13,8 +13,8 @@ export const LeftContent = styled.div`
 export const LeftContentInside = styled.div`
   display: flex;
   flex-direction: column;
-  width: 18vw;
-  max-width: 18vw;
+  width: 16vw;
+  max-width: 16vw;
   padding: 20px;
   margin-bottom: 10px;
   margin-top: 25px; 
