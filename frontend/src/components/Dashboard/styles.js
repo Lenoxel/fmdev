@@ -1,13 +1,52 @@
 import styled from 'styled-components';
 
+export const MainContainer = styled.div`
+  width: 100%;
+	margin: 0 auto;
+	display: flex;
+	border: 1px solid #ccc;
+	/* flex-wrap: wrap; */
+  justify-content: flex-start;
+`;
+
+export const AsideContainer = styled.aside`
+  height: 100%;
+  background: white;
+  padding: 20px 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+`;
+
 export const LeftContent = styled.div`
   display: flex;
   flex-direction: column;
   width: 20vw;
   max-width: 20vw;
-  border-style: ridge;
   padding: 20px;
   margin-bottom: 10px;
+
+  h1 {
+    padding-bottom: 15px;
+    font-weight: 600;
+    font-size: 24px;
+    line-height: 31px;
+    color: #4A5173;
+  }
+`;
+
+export const DashboardContent = styled.div`
+  width: 100%;
+	margin: 0px 10px;
+	padding: 0 10px;
+	background: white;
+  color: black;
+	text-align: center;
+	/* font-size: 1.5em; */
+  border-radius: 5px;
+  background: #FFFFFF;
+  box-shadow: 0px 4px 4px rgba(0, 0, 0, 0.1);
 `;
 
 export const LeftContentInside = styled.div`
@@ -19,8 +58,8 @@ export const LeftContentInside = styled.div`
   margin-bottom: 10px;
   margin-top: 25px; 
   margin-left: 10px; 
-  border-style: outset; 
-  height: 80%
+  height: 80%;
+  border: 2px solid #4A5173;
 `;
 
 export const FlexInside = styled.div`
@@ -43,7 +82,7 @@ export const Separator = styled.div`
   justify-content: center;
   align-items: center;
   margin-left: 2vw;
-  border-left: 2px dotted #000;
+  /* border-left: 2px dotted #000; */
   height: 462px;
 `;
 
@@ -52,15 +91,15 @@ export const GraphContainer = styled.div`
 	margin: 10px auto;
   padding-top: 5px;
 	display: flex;
-  background: aliceblue;
+  background: white;
 	justify-content: center;
 	align-items: center;
 `;
 
 export const GraphContainerInside = styled.div`
-	margin: 10px 3px;
+	margin: 15px;
   padding-top: 5px;
-  background: aliceblue;
+  background: white;
 	justify-content: center;
 	align-items: center;
 `;
@@ -77,15 +116,18 @@ export const ExternalLoadingContainer = styled.div`
 export const FlexItem = styled.div`
 	flex: 1;
 	margin: 5px;
-	padding: 0 10px;
+	padding: 10px;
 	text-align: center;
-	font-size: 1.5em;
+	/* font-size: 1.5em; */
   position: relative;
+  border-radius: 5px;
+  border: 2px solid #4A5173;
+  /* background: #4A5173; */
 `;
 
 export const TabsContainer = styled.div`
   flex-grow: 1;
-  background: aliceblue;
-  border-style: ridge;
-  margin: 0 10px 10px
+  border: 2px solid #4A5173;
+  /* background: #4A5173; */
+  margin: 40px;
 `;

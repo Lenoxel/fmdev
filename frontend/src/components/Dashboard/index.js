@@ -17,7 +17,7 @@ import { Creators as PredictionActions } from '../../store/ducks/prediction';
 import { Creators as StudentActions } from '../../store/ducks/student';
 import { Creators as PeriodActions } from '../../store/ducks/period';
 
-import { LeftContent, SelectContainer, Content, GraphContainer, GraphContainerInside, FlexItem, TabsContainer, ExternalLoadingContainer, LeftContentInside, FlexInside } from './styles';
+import { LeftContent, SelectContainer, Content, GraphContainer, GraphContainerInside, FlexItem, TabsContainer, ExternalLoadingContainer, LeftContentInside, FlexInside, AsideContainer, MainContainer, DashboardContent } from './styles';
 import Select from 'react-select';
 import Button from '../../styles/Button';
 
@@ -408,19 +408,19 @@ class Dashboard extends Component {
       text: textList,
       // textposition: 'auto',
       marker: {
-        color: 'rgb(142,124,195)'
+        color: 'rgb(74,81,115)'
       }
     };
     
     const detailedChartData = [chartInfo];
 
     const detailedChartLayout = {
-      title: 'Predição do Desempenho Binário por Aluno',
-      width: 600, 
-      height: 430,
-      font:{
-        family: 'Raleway, sans-serif'
-      },
+      title: 'Análise de desempenho dos alunos',
+      width: 670, 
+      height: 480,
+      // font:{
+      //   family: 'Raleway, sans-serif'  
+      // },
       showlegend: false,
       xaxis: {
         tickangle: -45
@@ -429,7 +429,7 @@ class Dashboard extends Component {
         zeroline: false,
         gridwidth: 2
       },
-      bargap :0.05
+      bargap: 0.05
     };
 
     if (changingWhat === 'changingVariable') {
@@ -518,9 +518,9 @@ class Dashboard extends Component {
     const detailedChartData = traces;
 
     const detailedChartLayout = {
-      title: 'Predição do Desempenho Binário por Variável',
-      width: 600, 
-      height: 430,
+      title: 'Análise de desempenho dos alunos',
+      width: 670, 
+      height: 480,
     };
 
     const predictionInfoText = updatedChoosedVariable.label + ' - ' + mappedVariablesMeaning[updatedChoosedVariable.label];
@@ -668,9 +668,9 @@ class Dashboard extends Component {
 
   getBarChartLayoutDynamic = () => {
     const barChartLayoutDynamic = {
-      title: 'Predição do Desempenho Binário',
-      width: 700, 
-      height: 430,
+      title: 'Análise de desempenho dos alunos',
+      width: 800, 
+      height: 500,
     };
 
     return barChartLayoutDynamic;
@@ -702,9 +702,9 @@ class Dashboard extends Component {
 
   getPieChartLayoutDynamic = () => {
     const pieChartLayoutDynamic = {
-      title: 'Predição do Desempenho Binário',
-      width: 700, 
-      height: 430,
+      title: 'Análise de desempenho dos alunos',
+      width: 800, 
+      height: 500,
     };
 
     return pieChartLayoutDynamic;
@@ -718,253 +718,256 @@ class Dashboard extends Component {
     } = this.state;
 
     return (
-      <PerfectScrollbar style={{ width: '100%', overflowX: 'auto' }}>
-        <ConfigContainer size='big' style={{ color: '#000' }}>
+      <MainContainer style={{ width: '100%', overflowX: 'auto' }}>
+        <AsideContainer>
+          <LeftContent>
+            <Header>
+              <h1>Learning Analytics Dashboard</h1>
+            </Header>
 
-          <Header>
-            <h1>Learning Analytics Dashboard</h1>
-          </Header>
+            {/* <SelectText>Fenômenos Educacionais</SelectText> */}
+            <SelectText>Modelos Treinados</SelectText>
+            <SelectContainer>
+              <Select
+                isClearable
+                value={phenomenonSelected}
+                noOptionsMessage={() => 'Sem dados'}
+                onChange={(e) => this.handleChange(e, 'phenomenonSelected')}
+                placeholder={'Selecione os Fenômenos'}
+                styles={selectStyle}
+                options={phenomenon.data.asMutable()} />
+            </SelectContainer>
 
-          <Content>
-
-            <LeftContent>
-              {/* <SelectText>Fenômenos Educacionais</SelectText> */}
-              <SelectText>Modelos Treinados</SelectText>
-              <SelectContainer>
-                <Select
-                  isClearable
-                  value={phenomenonSelected}
-                  noOptionsMessage={() => 'Sem dados'}
-                  onChange={(e) => this.handleChange(e, 'phenomenonSelected')}
-                  placeholder={'Selecione os Fenômenos'}
-                  styles={selectStyle}
-                  options={phenomenon.data.asMutable()} />
-              </SelectContainer>
-
-              <SelectText>Cursos</SelectText>
-              <SelectContainer>
-                <Select
-                  isMulti
-                  isClearable
-                  value={courseSelected}
-                  noOptionsMessage={() => 'Sem dados'}
-                  onChange={(e) => this.handleChange(e, 'courseSelected')}
-                  placeholder={'Selecione os Cursos'}
-                  styles={selectStyle}
-                  options={course.data.asMutable()} />
-              </SelectContainer>
+            <SelectText>Cursos</SelectText>
+            <SelectContainer>
+              <Select
+                isMulti
+                isClearable
+                value={courseSelected}
+                noOptionsMessage={() => 'Sem dados'}
+                onChange={(e) => this.handleChange(e, 'courseSelected')}
+                placeholder={'Selecione os Cursos'}
+                styles={selectStyle}
+                options={course.data.asMutable()} />
+            </SelectContainer>
 
 
-              <SelectText>Disciplinas</SelectText>
-              <SelectContainer>
-                <Select
-                  isMulti
-                  isClearable
-                  noOptionsMessage={() => 'Sem dados'}
-                  value={subjectSelected}
-                  onChange={(e) => this.handleChange(e, 'subjectSelected')}
-                  placeholder={'Selecione as Disciplinas'}
-                  styles={selectStyle}
-                  options={subject.data.asMutable()} />
-              </SelectContainer>
+            <SelectText>Disciplinas</SelectText>
+            <SelectContainer>
+              <Select
+                isMulti
+                isClearable
+                noOptionsMessage={() => 'Sem dados'}
+                value={subjectSelected}
+                onChange={(e) => this.handleChange(e, 'subjectSelected')}
+                placeholder={'Selecione as Disciplinas'}
+                styles={selectStyle}
+                options={subject.data.asMutable()} />
+            </SelectContainer>
 
 
-              <SelectText>Semestres</SelectText>
-              <SelectContainer>
-                <Select
-                  isMulti
-                  isClearable
-                  value={semesterSelected}
-                  noOptionsMessage={() => 'Sem dados'}
-                  onChange={(e) => this.handleChange(e, 'semesterSelected')}
-                  placeholder={'Selecione as Turmas'}
-                  styles={selectStyle}
-                  options={semester.data.asMutable()} />
-              </SelectContainer>
+            <SelectText>Semestres</SelectText>
+            <SelectContainer>
+              <Select
+                isMulti
+                isClearable
+                value={semesterSelected}
+                noOptionsMessage={() => 'Sem dados'}
+                onChange={(e) => this.handleChange(e, 'semesterSelected')}
+                placeholder={'Selecione as Turmas'}
+                styles={selectStyle}
+                options={semester.data.asMutable()} />
+            </SelectContainer>
 
-              {/* <SelectText>Períodos</SelectText>
-              <SelectContainer>
-                <Select
-                  isMulti
-                  isClearable
-                  value={periodSelected}
-                  noOptionsMessage={() => 'Sem dados'}
-                  onChange={(e) => this.handleChange(e, 'periodSelected')}
-                  placeholder={'Selecione os Períodos'}
-                  styles={selectStyle}
-                  options={period.data.asMutable()} />
-              </SelectContainer> */}
+            {/* <SelectText>Períodos</SelectText>
+            <SelectContainer>
+              <Select
+                isMulti
+                isClearable
+                value={periodSelected}
+                noOptionsMessage={() => 'Sem dados'}
+                onChange={(e) => this.handleChange(e, 'periodSelected')}
+                placeholder={'Selecione os Períodos'}
+                styles={selectStyle}
+                options={period.data.asMutable()} />
+            </SelectContainer> */}
 
-              <SelectText>Alunos</SelectText>
-              <SelectContainer>
-                <Select
-                  isMulti
-                  isClearable
-                  value={studentSelected}
-                  noOptionsMessage={() => 'Sem dados'}
-                  onChange={(e) => this.handleChange(e, 'studentSelected')}
-                  placeholder={'Selecione os Alunos'}
-                  styles={selectStyle}
-                  options={student.data.asMutable()} />
-              </SelectContainer>
+            <SelectText>Alunos</SelectText>
+            <SelectContainer>
+              <Select
+                isMulti
+                isClearable
+                value={studentSelected}
+                noOptionsMessage={() => 'Sem dados'}
+                onChange={(e) => this.handleChange(e, 'studentSelected')}
+                placeholder={'Selecione os Alunos'}
+                styles={selectStyle}
+                options={student.data.asMutable()} />
+            </SelectContainer>
 
-              <Button onClick={this.onSubmit.bind(this)}>Gerar Análise</Button>
+            <Button onClick={this.onSubmit.bind(this)}>Gerar Análise</Button>
 
-            </LeftContent>
-            
-            {prediction.data ?
-              <TabsContainer>
-                <Tabs
-                  value={tabValue}
-                  indicatorColor="primary"
-                  textColor="primary"
-                  onChange={this.handleTabChange}
-                  centered
-                >
-                  <Tab label="Geral" />
-                  <Tab label="Detalhado" />
-                </Tabs>
+          </LeftContent>
+        </AsideContainer>
 
-                {tabValue === 0 ?
-                  <GraphContainer>
-                    <FlexItem>
-                      <SelectText>Gráfico</SelectText>
-                        <SelectContainer>
-                          <Select
-                            value={choosedChart}
-                            onChange={this.handleChartChange}
-                            placeholder={'Selecione o tipo do gráfico'}
-                            styles={selectStyle}
-                            options={chartOptions} />
-                        </SelectContainer>
+        <DashboardContent>
+          {/* <ConfigContainer size='big' style={{ coalor: '#000' }}> */}
+            <Content>
+              
+              {prediction.data ?
+                <TabsContainer>
+                  <Tabs
+                    value={tabValue}
+                    indicatorColor="primary"
+                    textColor="primary"
+                    onChange={this.handleTabChange}
+                    centered
+                  >
+                    <Tab label="Geral" />
+                    <Tab label="Detalhado" />
+                  </Tabs>
 
-                        <Plot
-                          data={[
-                            this.getChartDataDynamically()
-                          ]}
-                          layout={
-                            this.getChartLayoutDynamically()
-                          }
-                          config={config}
-                          graphDiv="graph"
-                        />
-                    </FlexItem>
-                  </GraphContainer>
-                : null}
-
-                {tabValue === 1 ?
-                  <FlexInside>
-                    <LeftContentInside>
-                      <SelectText>Detalhar por</SelectText>
-                      <SelectContainer>
-                        <Select
-                          value={choosedDetailed}
-                          onChange={this.handleDetailedChange}
-                          styles={selectStyle}
-                          options={detailedOptions} />
-                      </SelectContainer>
-
-                      {choosedDetailed.value === 'byStudent' ?
-                        <div>
-                          <SelectText>Aluno</SelectText>
+                  {tabValue === 0 ?
+                    <GraphContainer>
+                      <FlexItem>
+                        <SelectText>Gráfico</SelectText>
                           <SelectContainer>
                             <Select
-                              value={choosedStudent}
-                              onChange={this.handleStudentChange}
-                              placeholder={'Selecione o aluno'}
+                              value={choosedChart}
+                              onChange={this.handleChartChange}
+                              placeholder={'Selecione o tipo do gráfico'}
                               styles={selectStyle}
-                              options={studentOptions} />
+                              options={chartOptions} />
                           </SelectContainer>
-      
-                          <SelectText>Variáveis</SelectText>
-                          <SelectContainer>
-                            <Select
-                              isMulti
-                              isClearable
-                              value={choosedVariable}
-                              onChange={this.handleVariableChange}
-                              placeholder={'Selecione as variáveis'}
-                              styles={selectStyle}
-                              options={variableOptions} />
-                          </SelectContainer>
-                          {predictionInfoText && predictionInfoText === 'Aprovado' ?
-                              <Alert variant="outlined" severity="success">
-                              Predição: Aprovado
-                              </Alert>
-                          : null}
-                          {predictionInfoText && predictionInfoText === 'Reprovado' ?
-                              <Alert variant="outlined" severity="error">
-                              Predição: Reprovado
-                              </Alert>
-                          : null}
-                        </div>
-                      : null}
 
-                      {choosedDetailed.value === 'byVariable' ?
-                        <div>
-                          <SelectText>Alunos</SelectText>
-                          <SelectContainer>
-                            <Select
-                              isMulti
-                              isClearable
-                              value={choosedStudent}
-                              onChange={this.handleStudentChange}
-                              placeholder={'Selecione os alunos'}
-                              styles={selectStyle}
-                              options={studentOptions} />
-                          </SelectContainer>
-      
-                          <SelectText>Variável</SelectText>
-                          <SelectContainer>
-                            <Select
-                              value={choosedVariable}
-                              onChange={this.handleVariableChange}
-                              placeholder={'Selecione a variável'}
-                              styles={selectStyle}
-                              options={variableOptions} />
-                          </SelectContainer>
-                          {predictionInfoText ?
-                              <Alert variant="outlined" severity="info">
-                              {predictionInfoText}
-                              </Alert>
-                          : null}
-                        </div>
-                      : null}
-                    </LeftContentInside>
-
-                    {choosedStudent && choosedVariable && !loadingChart ?
-                      <GraphContainerInside>
-                        <FlexItem>
                           <Plot
-                            data={
-                              detailedChartData
-                            }
+                            data={[
+                              this.getChartDataDynamically()
+                            ]}
                             layout={
-                              detailedChartLayout
+                              this.getChartLayoutDynamically()
                             }
                             config={config}
                             graphDiv="graph"
                           />
-                        </FlexItem>
-                      </GraphContainerInside>
-                    : null }
-                  </FlexInside>
-                : null}
-              </TabsContainer>
-            : null}
+                      </FlexItem>
+                    </GraphContainer>
+                  : null}
 
-            {prediction.loading ?
-              <ExternalLoadingContainer>
-                <LoadingContainer>
-                  <ProgressSpinner style={{ width: '70px', height: '70px' }} strokeWidth="4" fill="#EEEEEE" animationDuration=".5s" />
-                </LoadingContainer>
-              </ExternalLoadingContainer>
+                  {tabValue === 1 ?
+                    <FlexInside>
+                      <LeftContentInside>
+                        <SelectText>Detalhar por</SelectText>
+                        <SelectContainer>
+                          <Select
+                            value={choosedDetailed}
+                            onChange={this.handleDetailedChange}
+                            styles={selectStyle}
+                            options={detailedOptions} />
+                        </SelectContainer>
+
+                        {choosedDetailed.value === 'byStudent' ?
+                          <div>
+                            <SelectText>Aluno</SelectText>
+                            <SelectContainer>
+                              <Select
+                                value={choosedStudent}
+                                onChange={this.handleStudentChange}
+                                placeholder={'Selecione o aluno'}
+                                styles={selectStyle}
+                                options={studentOptions} />
+                            </SelectContainer>
+        
+                            <SelectText>Variáveis</SelectText>
+                            <SelectContainer>
+                              <Select
+                                isMulti
+                                isClearable
+                                value={choosedVariable}
+                                onChange={this.handleVariableChange}
+                                placeholder={'Selecione as variáveis'}
+                                styles={selectStyle}
+                                options={variableOptions} />
+                            </SelectContainer>
+                            {predictionInfoText && predictionInfoText === 'Aprovado' ?
+                                <Alert variant="outlined" severity="success">
+                                Predição: Aprovado
+                                </Alert>
+                            : null}
+                            {predictionInfoText && predictionInfoText === 'Reprovado' ?
+                                <Alert variant="outlined" severity="error">
+                                Predição: Reprovado
+                                </Alert>
+                            : null}
+                          </div>
+                        : null}
+
+                        {choosedDetailed.value === 'byVariable' ?
+                          <div>
+                            <SelectText>Alunos</SelectText>
+                            <SelectContainer>
+                              <Select
+                                isMulti
+                                isClearable
+                                value={choosedStudent}
+                                onChange={this.handleStudentChange}
+                                placeholder={'Selecione os alunos'}
+                                styles={selectStyle}
+                                options={studentOptions} />
+                            </SelectContainer>
+        
+                            <SelectText>Variável</SelectText>
+                            <SelectContainer>
+                              <Select
+                                value={choosedVariable}
+                                onChange={this.handleVariableChange}
+                                placeholder={'Selecione a variável'}
+                                styles={selectStyle}
+                                options={variableOptions} />
+                            </SelectContainer>
+                            {predictionInfoText ?
+                                <Alert variant="outlined" severity="info">
+                                {predictionInfoText}
+                                </Alert>
+                            : null}
+                          </div>
+                        : null}
+                      </LeftContentInside>
+
+                      {choosedStudent && choosedVariable && !loadingChart ?
+                        <GraphContainerInside>
+                          <FlexItem>
+                            <Plot
+                              data={
+                                detailedChartData
+                              }
+                              layout={
+                                detailedChartLayout
+                              }
+                              config={config}
+                              graphDiv="graph"
+                            />
+                          </FlexItem>
+                        </GraphContainerInside>
+                      : null }
+                    </FlexInside>
+                  : null}
+                </TabsContainer>
               : null}
-            
-          </Content>
 
-        </ConfigContainer >
-      </PerfectScrollbar>
+              {prediction.loading ?
+                <ExternalLoadingContainer>
+                  <LoadingContainer>
+                    <ProgressSpinner style={{ width: '70px', height: '70px' }} strokeWidth="4" fill="#EEEEEE" animationDuration=".5s" />
+                  </LoadingContainer>
+                </ExternalLoadingContainer>
+                : null}
+              
+            </Content>
+
+          {/* </ConfigContainer > */}
+        </DashboardContent>
+      </MainContainer>
     )
   }
 }
