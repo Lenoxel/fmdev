@@ -17,11 +17,11 @@ export function* postPrediction({ filter }) {
     const modelEndpoint = filter.phenomenon;
     const response = yield call(api.post, `predict/${modelEndpoint}`, filter);
 
-    yield put(toastrActions.add({
-      type: 'success',
-      title: 'Sucesso',
-      message: `Análise finalizada com sucesso!`
-    }));
+    // yield put(toastrActions.add({
+    //   type: 'success',
+    //   title: 'Sucesso',
+    //   message: `Análise finalizada com sucesso!`
+    // }));
 
     yield put(Creators.predictionSuccess(response.data));
   } catch (err) {

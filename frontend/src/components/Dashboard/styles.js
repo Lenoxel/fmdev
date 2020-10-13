@@ -36,16 +36,19 @@ export const LeftContent = styled.div`
   }
 `;
 
-export const DashboardContent = styled.div`
+export const DashboardMainContainer = styled.div`
   width: 100%;
-	margin: 0px 10px;
-	padding: 0 10px;
-	background: white;
+  display: flex;
+  flex-direction: column;
+`;
+
+export const FullContainer = styled.div`
+  width: 100%;
+	padding: 10px;
+  display: flex;
   color: black;
 	text-align: center;
-	/* font-size: 1.5em; */
   border-radius: 5px;
-  background: #FFFFFF;
   box-shadow: 0px 4px 4px rgba(0, 0, 0, 0.1);
 `;
 
@@ -74,7 +77,17 @@ export const SelectContainer = styled.div`
 export const Content = styled.div`
   display: flex;
   padding-top: 0;
+  /* width: 50%; */
+  margin: 0 10px;
   margin: 0 2rem 1rem;
+`;
+
+export const HalfContent = styled.div`
+  /* display: flex; */
+  padding-top: 0;
+  width: 50%;
+  margin: 0 10px;
+  /* margin: 0 2rem 1rem; */
 `;
 
 export const Separator = styled.div`
@@ -108,7 +121,7 @@ export const ExternalLoadingContainer = styled.div`
   max-width: 420px;
 	margin: 0 auto;
 	display: flex;
-  background: white;
+  /* background: white; */
 	justify-content: center;
 	align-items: center;
 `;

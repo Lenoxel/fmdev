@@ -111,7 +111,18 @@ class Predict(Resource):
 
         data = utils.execute_query(query)
 
-        query_student_names = f"""SELECT
+        # query_relevant_variables = f"""SELECT
+        #                 id_do_aluno, nome_do_aluno,
+        #                 prova01, prova01_2chamada, prova02, prova02_2chamada, media_provas,
+        #                 forum01, forum02, forum03, forum04, media_forum,
+        #                 webquest01, webquest02, media_webquest
+        #             FROM
+        #                 moodle
+        #             {where_clousure}
+        #             ORDER BY
+        #                 "nome_do_aluno" ASC, "ctid" ASC"""
+
+        query_relevant_variables = f"""SELECT
                         id_do_aluno, nome_do_aluno
                     FROM
                         moodle
@@ -119,9 +130,9 @@ class Predict(Resource):
                     ORDER BY
                         "nome_do_aluno" ASC, "ctid" ASC"""
 
-        student_names = utils.execute_query(query_student_names)
+        relevant_variables = utils.execute_query(query_relevant_variables)
 
-        return data, student_names
+        return data, relevant_variables
 
 
     def post(self, key):
@@ -136,7 +147,7 @@ class Predict(Resource):
 
             payload = request.get_json()
 
-            query_select_response, students = self.get_payload(variables, payload)
+            query_select_response, relevant_variables = self.get_payload(variables, payload)
 
             x_test = pd.DataFrame(query_select_response)
             model = self.load_model(filename=key)
@@ -144,15 +155,38 @@ class Predict(Resource):
             predicted_data = predict.tolist()
             TrainModelResource.update_predict(key)
 
-            real_data = self.format_real_data(students, query_select_response)
+            real_data = self.format_real_data(relevant_variables, query_select_response)
 
-            return { 'predictedData': predicted_data, 'realData': real_data}
+            count_approved, percentage_approved, count_disapproved, percentage_disapproved = self.count_approved_and_disapproved(predicted_data)
+
+            return { 'predictedData': predicted_data, 'realData': real_data, 'countApproved': count_approved, 'percentageApproved': percentage_approved, 'countDisapproved': count_disapproved, 'percentageDisapproved': percentage_disapproved}
         except:
             traceback.print_exc()
             return {"msg": "Error on GET Copy"}, 500
 
 
-    def format_real_data(self, students, query_select_response):
+    def count_approved_and_disapproved(self, predicted_data):
+        count_approved = 0
+        count_disapproved = 0
+
+        for binary_result in predicted_data:
+            if binary_result == 1:
+                count_approved += 1
+            else:
+                count_disapproved += 1
+
+        total_students = len(predicted_data)
+
+        percentage_approved = round((count_approved * 100) / total_students, 2)
+        percentage_disapproved = round((count_disapproved * 100) / total_students, 2)
+
+        print(percentage_approved, percentage_disapproved)
+        
+        return count_approved, percentage_approved, count_disapproved, percentage_disapproved
+
+
+    def format_real_data(self, relevant_variables, query_select_response):
+        # print(query_select_response)
         for index, value_dict in enumerate(query_select_response):
-            value_dict.update(students[index])
+            value_dict.update(relevant_variables[index])
         return query_select_response
