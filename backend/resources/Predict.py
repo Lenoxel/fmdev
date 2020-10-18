@@ -49,6 +49,11 @@ class Predict(Resource):
     def get_payload(self, variables, payload):
         where_clousure = ""
 
+        print(payload['courses'])
+        print(payload['subjects'])
+        print(payload['semesters'])
+        print(payload['students'])
+
         if payload['courses'] is not None and len(payload['courses']) > 0:
             courses = utils.list_to_sql_string(payload['courses'])
             where_clousure = f"WHERE curso IN ({courses})"
@@ -69,14 +74,6 @@ class Predict(Resource):
             else:
                 where_clousure += f"WHERE semestre IN ({semesters})"
 
-
-        if payload['periods'] is not None and len(payload['periods']) > 0:
-            periods = utils.list_to_sql_string(payload['periods'])
-
-            if where_clousure != '':
-                where_clousure += f" AND período IN ({periods})"
-            else:
-                where_clousure = f"WHERE período IN ({periods})"
 
         if payload['students'] is not None and len(payload['students']) > 0:
             students = utils.list_to_sql_string(payload['students'])
@@ -159,7 +156,7 @@ class Predict(Resource):
 
             count_approved, percentage_approved, count_disapproved, percentage_disapproved = self.count_approved_and_disapproved(predicted_data)
 
-            return { 'predictedData': predicted_data, 'realData': real_data, 'countApproved': count_approved, 'percentageApproved': percentage_approved, 'countDisapproved': count_disapproved, 'percentageDisapproved': percentage_disapproved}
+            return { 'predictedData': predicted_data, 'realData': real_data, 'indicators': variables, 'countApproved': count_approved, 'percentageApproved': percentage_approved, 'countDisapproved': count_disapproved, 'percentageDisapproved': percentage_disapproved}
         except:
             traceback.print_exc()
             return {"msg": "Error on GET Copy"}, 500
@@ -180,7 +177,7 @@ class Predict(Resource):
         percentage_approved = round((count_approved * 100) / total_students, 2)
         percentage_disapproved = round((count_disapproved * 100) / total_students, 2)
 
-        print(percentage_approved, percentage_disapproved)
+        #print(percentage_approved, percentage_disapproved)
         
         return count_approved, percentage_approved, count_disapproved, percentage_disapproved
 

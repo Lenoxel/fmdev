@@ -4,13 +4,13 @@ export const MainContainer = styled.div`
   width: 100%;
 	margin: 0 auto;
 	display: flex;
-	border: 1px solid #ccc;
+	/* border: 1px solid #ccc; */
 	/* flex-wrap: wrap; */
   justify-content: flex-start;
 `;
 
 export const AsideContainer = styled.aside`
-  height: 100%;
+  /* height: 100%; */
   background: white;
   padding: 20px 10px;
   display: flex;
@@ -46,10 +46,17 @@ export const FullContainer = styled.div`
   width: 100%;
 	padding: 10px;
   display: flex;
-  color: black;
-	text-align: center;
+	/* text-align: center; */
   border-radius: 5px;
-  box-shadow: 0px 4px 4px rgba(0, 0, 0, 0.1);
+  /* box-shadow: 0px 4px 4px rgba(0, 0, 0, 0.1); */
+
+  h1 {
+    padding-bottom: 15px;
+    font-weight: 600;
+    font-size: 24px;
+    line-height: 31px;
+    color: #4A5173;
+  }
 `;
 
 export const LeftContentInside = styled.div`

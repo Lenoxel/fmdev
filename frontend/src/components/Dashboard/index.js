@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 
+import PerfectScrollbar from 'react-perfect-scrollbar';
 import { ConfigContainer } from '../../styles/ConfigContainer';
 import {
   Header, LoadingContainer, SelectText, selectStyle
@@ -26,6 +27,7 @@ import Tab from '@material-ui/core/Tab';
 import { Alert, AlertTitle } from '@material-ui/lab';
 import Chip from '@material-ui/core/Chip';
 import Tooltip from '@material-ui/core/Tooltip';
+import MonitorIcon from 'react-feather/dist/icons/monitor';
 
 // simplest method: uses precompiled complete bundle from `plotly.js`
 // import Plot from 'react-plotly.js';
@@ -92,7 +94,7 @@ class Dashboard extends Component {
       'var31c': 'Número de distintos dias onde o aluno acessou o AVA.',
       'var32a': 'Número de vezes em que o aluno acessou o AVA por período do dia (manhãs).',
       'var32b': 'Número de vezes em que o aluno acessou o AVA por período do dia (tardes).',
-      'var32c': 'Número de vezes em que o aluno acessou o AVA por período do dia ("anoiteceres").',
+      'var32c': 'Número de vezes em que o aluno acessou o AVA por período do dia (fins de tardes).',
       'var32d': 'Número de vezes em que o aluno acessou o AVA por período do dia (noites).',
       'var33': 'Número de atividades/atribuições entregues por um aluno dentro do prazo, por curso.',
       'var34': 'Número total de mensagens postadas pelo aluno nos fóruns.',
@@ -117,15 +119,16 @@ class Dashboard extends Component {
     // const { phenomenonSelected, courseSelected, subjectSelected, semesterSelected, periodSelected, studentSelected } = this.props.indicator;
 
     if (name === 'courseSelected') {
-
-      if (!item || !item.length) {
+      if (!item || !item.label || !item.value) {
         this.props.subjectSuccess([]);
         this.props.semesterSuccess([]);
         this.props.studentSuccess([]);
         return;
       }
 
-      this.props.getSubjects({ courses: item.map(item => item.value) });
+      this.props.getSubjects({ courses: [item.value] });
+
+      // this.props.getSubjects({ courses: item.map(item => item.value) });
     }
 
     if (name === 'subjectSelected') {
@@ -133,26 +136,28 @@ class Dashboard extends Component {
 
       let courses, subjects;
 
-      if ((!item || !item.length)) {
+      if ((!item || !item.label || !item.value)) {
         this.props.studentSuccess([]);
         this.props.semesterSuccess([]);
         return;
       }
 
-      if (item && item.length) {
-        subjects = item.map(item => item.value);
+      if (item && item.label && item.value) {
+        subjects = [item.value];
+
+        // subjects = item.map(item => item.value);
       }
 
-      if (courseSelected && courseSelected.length) {
-        courses = courseSelected.map(item => item.value);
+      if (courseSelected && courseSelected.label && courseSelected.value) {
+        courses = [courseSelected.value];
+
+        // courses = courseSelected.map(item => item.value);
       }
 
       this.props.getSemesters({ 
         subjects,
         courses
       });
-
-      // this.props.getPeriods({ subjects: item.map(item => item.value) });
 
       this.props.getStudents({ 
         subjects,
@@ -165,22 +170,25 @@ class Dashboard extends Component {
 
       let courses, subjects, semesters;
 
-      if ((!item || !item.length) && (!subjectSelected || !subjectSelected.length)) {
+      if ((!item || !item.label || !item.value) && (!subjectSelected || !subjectSelected.label || !subjectSelected.value)) {
         // this.props.periodSuccess([]);
         this.props.studentSuccess([]);
         return;
       } 
         
-      if (item && item.length) {
-        semesters = item.map(item => item.value);
+      if (item && item.label && item.value) {
+        // semesters = item.map(item => item.value);
+        semesters = [item.value];
       }
 
-      if (courseSelected && courseSelected.length) {
-        courses = courseSelected.map(item => item.value);
+      if (courseSelected && courseSelected.label && courseSelected.value) {
+        // courses = courseSelected.map(item => item.value);
+        courses = [courseSelected.value];
       }
 
-      if (subjectSelected && subjectSelected.length) {
-        subjects = subjectSelected.map(item => item.value);
+      if (subjectSelected && subjectSelected.label && subjectSelected.value) {
+        // subjects = subjectSelected.map(item => item.value);
+        subjects = [subjectSelected.value];
       }
 
       // this.props.getPeriods({ 
@@ -195,34 +203,34 @@ class Dashboard extends Component {
       })
     }
 
-    if (name === 'periodSelected') {
-      const { subjectSelected, semesterSelected } = this.props.indicator;
+    // if (name === 'periodSelected') {
+    //   const { subjectSelected, semesterSelected } = this.props.indicator;
 
-      let subjects, semesters, periods;
+    //   let subjects, semesters, periods;
 
-      if ((!item || !item.length) && (!subjectSelected || !subjectSelected.length) && (!semesterSelected && !semesterSelected.length)) {
-        this.props.studentSuccess([]);
-        return;
-      } 
+    //   if ((!item || !item.length) && (!subjectSelected || !subjectSelected.length) && (!semesterSelected && !semesterSelected.length)) {
+    //     this.props.studentSuccess([]);
+    //     return;
+    //   } 
         
-      if (item && item.length) {
-        periods = item.map(item => item.value);
-      }
+    //   if (item && item.length) {
+    //     periods = item.map(item => item.value);
+    //   }
 
-      if (subjectSelected && subjectSelected.length) {
-        subjects = subjectSelected.map(item => item.value);
-      }
+    //   if (subjectSelected && subjectSelected.length) {
+    //     subjects = subjectSelected.map(item => item.value);
+    //   }
 
-      if (semesterSelected && semesterSelected.length) {
-        semesters = semesterSelected.map(item => item.value);
-      }
+    //   if (semesterSelected && semesterSelected.length) {
+    //     semesters = semesterSelected.map(item => item.value);
+    //   }
 
-      this.props.getStudents({
-        subjects,
-        semesters,
-        periods
-      })
-    }
+    //   this.props.getStudents({
+    //     subjects,
+    //     semesters,
+    //     periods
+    //   })
+    // }
   };
 
   renderWarningMsg = (msg) => {
@@ -243,11 +251,12 @@ class Dashboard extends Component {
     }
 
     filter.phenomenon = phenomenonSelected.value;
+    
     filter.courses = this.getValueFromSelect(courseSelected);
     filter.subjects = this.getValueFromSelect(subjectSelected);
     filter.semesters = this.getValueFromSelect(semesterSelected);
     filter.periods = this.getValueFromSelect(periodSelected);
-    filter.students = this.getValueFromSelect(studentSelected);
+    filter.students = this.getValueFromIsMultiSelect(studentSelected);
 
     this.props.postPrediction(filter);
 
@@ -263,8 +272,16 @@ class Dashboard extends Component {
 
   setChip = (value, event) => this.setState({ chipSelected: value });
 
-  getValueFromSelect = items => {
-    if (!items) {
+  getValueFromSelect = item => {
+    if (!item || !item.value) {
+      return null;
+    }
+
+    return [item.value];
+  }
+
+  getValueFromIsMultiSelect = items => {
+    if (!items || !items.length) {
       return null;
     }
 
@@ -605,49 +622,121 @@ class Dashboard extends Component {
     return variableOptions;
   }
 
-  handleChartChange = (event, value) => {
-    if (event) {
-      this.setState({ 
-        choosedChart: event,
-      });
-    }
-  };
+  // handleChartChange = (event, value) => {
+  //   if (event) {
+  //     this.setState({ 
+  //       choosedChart: event,
+  //     });
+  //   }
+  // };
 
-  getDetailedChartDynamically = () => {
+  // getDetailedChartDynamically = (choosedChart) => {
+  //   const { prediction } = this.props;
+
+  //   if (choosedChart.value === 'bar') {
+  //     return this.getBarChartDataDynamic(prediction.data.predictedData);
+  //   } else if (choosedChart.value === 'pie') {
+  //     return this.getPieChartDataDynamic(prediction.data.predictedData);
+  //   }
+  // }
+
+  getChartDataDynamically = (chartType) => {
+    if (chartType === 'satisfactoryAndUnsatisfactory') {
+      return this.getSatisfactoryAndUnsatisfactoryChartDataDynamic();
+    } else if (chartType === 'allIndicatorsMean') {
+      return this.getAllIndicatorsMeanChartDataDynamic();
+    }
+  }
+
+  getChartLayoutDynamically = (chartType) => {
+    if (chartType === 'satisfactoryAndUnsatisfactory') {
+      return this.getSatisfactoryAndUnsatisfactoryChartLayoutDynamic();
+    } else if (chartType === 'allIndicatorsMean') {
+      return this.getAllIndicatorsMeanChartLayoutDynamic();
+    }
+  }
+
+  getAllIndicatorsMeanChartDataDynamic = () => {
     const { prediction } = this.props;
 
-    const { choosedChart } = this.state;
+    let indicators = prediction.data.indicators;
+    indicators = indicators.split(', ');
 
-    if (choosedChart.value === 'bar') {
-      return this.getBarChartDataDynamic(prediction.data.predictedData);
-    } else if (choosedChart.value === 'pie') {
-      return this.getPieChartDataDynamic(prediction.data.predictedData);
+    let indicatorSatisfactoryMeans = [];
+    let indicatorUnsatisfactoryMeans = [];
+
+    for (const indicator of indicators) {
+      let indicatorValueSatisfactorySum = 0;
+      let satisfactoryCount = 0;
+      let indicatorValueUnsatisfactorySum = 0;
+      let unsatisfactoryCount = 0;
+
+      for (const [index, uniqueRealData] of prediction.data.realData.entries()) {
+        const choosedStudentVariablesLabelAndValue = Object.assign({}, uniqueRealData);
+        
+        const studentPredictionResult = prediction.data.predictedData[index];
+        if (studentPredictionResult === 0) {
+          indicatorValueUnsatisfactorySum += choosedStudentVariablesLabelAndValue[indicator];
+          unsatisfactoryCount += 1;
+        } else {
+          indicatorValueSatisfactorySum += choosedStudentVariablesLabelAndValue[indicator];
+          satisfactoryCount += 1;
+        }
+      }
+
+      const indicatorSatisfactoryMean = satisfactoryCount > 0 ? (indicatorValueSatisfactorySum / satisfactoryCount).toFixed(2) : 0;
+      indicatorSatisfactoryMeans.push(indicatorSatisfactoryMean);
+
+      const indicatorUnatisfactoryMean = unsatisfactoryCount > 0 ? (indicatorValueUnsatisfactorySum / unsatisfactoryCount).toFixed(2) : 0;
+      indicatorUnsatisfactoryMeans.push(indicatorUnatisfactoryMean);
     }
+
+    const traceSatisfactory = {
+      type: 'bar',
+      x: indicatorSatisfactoryMeans,
+      y: indicators,
+      name: 'Aprovados',
+      marker: {
+        color: 'green',
+        width: 1
+      },
+      orientation: 'h',
+    };
+
+    const traceUnsatisfactory = {
+      type: 'bar',
+      x: indicatorUnsatisfactoryMeans,
+      y: indicators,
+      name: 'Reprovados',
+      marker: {
+        color: 'red',
+        width: 1
+      },
+      orientation: 'h',
+    };
+
+    return [traceSatisfactory, traceUnsatisfactory];
   }
 
-  getChartDataDynamically = () => {
-    const { prediction } = this.props;
+  getAllIndicatorsMeanChartLayoutDynamic = () => {
+    const barChartLayoutDynamic = {
+      title: 'Média dos indicadores dos alunos',
+      autosize: false,
+      width: 530, 
+      height: 400,
+      yaxis: {
+        automargin: true,
+      },
+      font: {
+        family: 'Avenir, sans-serif'  
+      },
+      barmode: 'stack',
+    };
 
-    const { choosedChart } = this.state;
-
-    if (choosedChart.value === 'bar') {
-      return this.getBarChartDataDynamic(prediction.data.predictedData);
-    } else if (choosedChart.value === 'pie') {
-      return this.getPieChartDataDynamic(prediction.data.predictedData);
-    }
+    return barChartLayoutDynamic;
   }
 
-  getChartLayoutDynamically = () => {
-    const { choosedChart } = this.state;
-
-    if (choosedChart.value === 'bar') {
-      return this.getBarChartLayoutDynamic();
-    } else if (choosedChart.value === 'pie') {
-      return this.getPieChartLayoutDynamic();
-    }
-  }
-
-  getBarChartDataDynamic = (predictionResult) => {
+  getSatisfactoryAndUnsatisfactoryChartDataDynamic = () => {
     const { prediction } = this.props;
 
     let countZeros = prediction.data.countDisapproved;
@@ -662,17 +751,20 @@ class Dashboard extends Component {
       type: 'bar'
     };
 
-    return barChartDataDynamic;
+    return [barChartDataDynamic];
   }
 
-  getBarChartLayoutDynamic = () => {
+  getSatisfactoryAndUnsatisfactoryChartLayoutDynamic = () => {
     const barChartLayoutDynamic = {
       title: 'Análise de desempenho dos alunos',
       autosize: false,
       width: 530, 
-      height: 360,
+      height: 400,
       yaxis: {
         automargin: true,
+      },
+      font: {
+        family: 'Avenir, sans-serif'  
       },
     };
 
@@ -708,6 +800,9 @@ class Dashboard extends Component {
       title: 'Análise de desempenho dos alunos',
       width: 800, 
       height: 500,
+      font:{
+        family: 'Avenir, sans-serif'  
+      },
     };
 
     return pieChartLayoutDynamic;
@@ -721,378 +816,496 @@ class Dashboard extends Component {
     } = this.state;
 
     return (
-      <MainContainer style={{ width: '100%', overflowX: 'auto' }}>
-        <AsideContainer>
-          <LeftContent>
-            <Header>
-              <h1>Learning Analytics Dashboard</h1>
-            </Header>
+      <PerfectScrollbar style={{ width: '100%', overflowX: 'auto' }}>
+        <MainContainer >
+          <AsideContainer>
+            <LeftContent>
+              <Header>
+                <h1>Filtros</h1>
+              </Header>
 
-            {/* <SelectText>Fenômenos Educacionais</SelectText> */}
-            <SelectText>Modelos Treinados</SelectText>
-            <SelectContainer>
-              <Select
-                isClearable
-                value={phenomenonSelected}
-                noOptionsMessage={() => 'Sem dados'}
-                onChange={(e) => this.handleChange(e, 'phenomenonSelected')}
-                placeholder={'Selecione os Fenômenos'}
-                styles={selectStyle}
-                options={phenomenon.data.asMutable()} />
-            </SelectContainer>
+              {/* <SelectText>Fenômenos Educacionais</SelectText> */}
+              <SelectText>Modelos Treinados</SelectText>
+              <SelectContainer>
+                <Select
+                  isClearable
+                  value={phenomenonSelected}
+                  noOptionsMessage={() => 'Sem dados'}
+                  onChange={(e) => this.handleChange(e, 'phenomenonSelected')}
+                  placeholder={'Selecione os Fenômenos'}
+                  styles={selectStyle}
+                  options={phenomenon.data.asMutable()} />
+              </SelectContainer>
 
-            <SelectText>Cursos</SelectText>
-            <SelectContainer>
-              <Select
-                isMulti
-                isClearable
-                value={courseSelected}
-                noOptionsMessage={() => 'Sem dados'}
-                onChange={(e) => this.handleChange(e, 'courseSelected')}
-                placeholder={'Selecione os Cursos'}
-                styles={selectStyle}
-                options={course.data.asMutable()} />
-            </SelectContainer>
+              <SelectText>Cursos</SelectText>
+              <SelectContainer>
+                <Select
+                  isClearable
+                  value={courseSelected}
+                  noOptionsMessage={() => 'Sem dados'}
+                  onChange={(e) => this.handleChange(e, 'courseSelected')}
+                  placeholder={'Selecione os Cursos'}
+                  styles={selectStyle}
+                  options={course.data.asMutable()} />
+              </SelectContainer>
 
 
-            <SelectText>Disciplinas</SelectText>
-            <SelectContainer>
-              <Select
-                isMulti
-                isClearable
-                noOptionsMessage={() => 'Sem dados'}
-                value={subjectSelected}
-                onChange={(e) => this.handleChange(e, 'subjectSelected')}
-                placeholder={'Selecione as Disciplinas'}
-                styles={selectStyle}
-                options={subject.data.asMutable()} />
-            </SelectContainer>
+              <SelectText>Disciplinas</SelectText>
+              <SelectContainer>
+                <Select
+                  isClearable
+                  noOptionsMessage={() => 'Sem dados'}
+                  value={subjectSelected}
+                  onChange={(e) => this.handleChange(e, 'subjectSelected')}
+                  placeholder={'Selecione as Disciplinas'}
+                  styles={selectStyle}
+                  options={subject.data.asMutable()} />
+              </SelectContainer>
 
-            <SelectText>Semestres</SelectText>
-            <SelectContainer>
-              <Select
-                isMulti
-                isClearable
-                value={semesterSelected}
-                noOptionsMessage={() => 'Sem dados'}
-                onChange={(e) => this.handleChange(e, 'semesterSelected')}
-                placeholder={'Selecione as Turmas'}
-                styles={selectStyle}
-                options={semester.data.asMutable()} />
-            </SelectContainer>
+              <SelectText>Semestres</SelectText>
+              <SelectContainer>
+                <Select
+                  isClearable
+                  value={semesterSelected}
+                  noOptionsMessage={() => 'Sem dados'}
+                  onChange={(e) => this.handleChange(e, 'semesterSelected')}
+                  placeholder={'Selecione as Turmas'}
+                  styles={selectStyle}
+                  options={semester.data.asMutable()} />
+              </SelectContainer>
 
-            {/* <SelectText>Períodos</SelectText>
-            <SelectContainer>
-              <Select
-                isMulti
-                isClearable
-                value={periodSelected}
-                noOptionsMessage={() => 'Sem dados'}
-                onChange={(e) => this.handleChange(e, 'periodSelected')}
-                placeholder={'Selecione os Períodos'}
-                styles={selectStyle}
-                options={period.data.asMutable()} />
-            </SelectContainer> */}
+              {/* <SelectText>Períodos</SelectText>
+              <SelectContainer>
+                <Select
+                  isMulti
+                  isClearable
+                  value={periodSelected}
+                  noOptionsMessage={() => 'Sem dados'}
+                  onChange={(e) => this.handleChange(e, 'periodSelected')}
+                  placeholder={'Selecione os Períodos'}
+                  styles={selectStyle}
+                  options={period.data.asMutable()} />
+              </SelectContainer> */}
 
-            <SelectText>Alunos</SelectText>
-            <SelectContainer>
-              <Select
-                isMulti
-                isClearable
-                value={studentSelected}
-                noOptionsMessage={() => 'Sem dados'}
-                onChange={(e) => this.handleChange(e, 'studentSelected')}
-                placeholder={'Selecione os Alunos'}
-                styles={selectStyle}
-                options={student.data.asMutable()} />
-            </SelectContainer>
+              <SelectText>Alunos</SelectText>
+              <SelectContainer>
+                <Select
+                  isMulti
+                  isClearable
+                  value={studentSelected}
+                  noOptionsMessage={() => 'Sem dados'}
+                  onChange={(e) => this.handleChange(e, 'studentSelected')}
+                  placeholder={'Selecione os Alunos'}
+                  styles={selectStyle}
+                  options={student.data.asMutable()} />
+              </SelectContainer>
 
-            <Button onClick={this.onSubmit.bind(this)}>Gerar Análise</Button>
+              <Button onClick={this.onSubmit.bind(this)}>Gerar Análise</Button>
 
-          </LeftContent>
-        </AsideContainer>
+            </LeftContent>
+          </AsideContainer>
 
-        {prediction.data ?
-        <DashboardMainContainer>
-          <FullContainer>
-            <Header>
-              <div style={{ display: 'flex', paddingLeft: '2rem' }}>
-                <div>
-                  <Tooltip title="Veja o resumo das principais informações da análise gerada" arrow>
-                    <Chip
-                      label='Visão Geral'
-                      className={chipSelected === 'overallView' ? 'active-chip' : 'inactive-chip'}
-                      onClick={this.setChip.bind(this, 'overallView')}
-                    />
-                  </Tooltip>
+          {prediction.data ?
+          <DashboardMainContainer>
+            <FullContainer>
+              <Header style={{ padding: '10px 10px 0px' }}>
+                <MonitorIcon size={22} color={'#4A5173'} />
+                <h1 style={{ padding: '0px 0px 0px 12px' }}>Learning Analytics Dashboard</h1>
+              </Header>
+            </FullContainer>
+
+            <FullContainer style={{ boxShadow: '0px 4px 4px rgba(0, 0, 0, 0.1)' }}>
+              <Header>
+                <div style={{ display: 'flex', paddingLeft: '3rem' }}>
+                  <div>
+                    <Tooltip title="Veja o resumo das principais informações da análise gerada" arrow>
+                      <Chip
+                        label='Visão Geral'
+                        style={{ fontFamily: 'Avenir, sans-serif' }}
+                        className={chipSelected === 'overallView' ? 'active-chip' : 'inactive-chip'}
+                        onClick={this.setChip.bind(this, 'overallView')}
+                      />
+                    </Tooltip>
+                  </div>
+                  <div style={{ paddingLeft: '.5vw' }}>
+                    <Tooltip title="Veja os detalhes da situação de cada aluno" arrow>
+                      <Chip
+                        label='Alunos'
+                        style={{ fontFamily: 'Avenir, sans-serif' }}
+                        className={chipSelected === 'studentsView' ? 'active-chip' : 'inactive-chip'}
+                        onClick={this.setChip.bind(this, 'studentsView')}
+                      />
+                    </Tooltip>
+                  </div>
+                  <div style={{ paddingLeft: '.5vw' }}>
+                    <Tooltip title="Veja as informações dos atributos dos alunos no AVA" arrow>
+                      <Chip
+                        label='Indicadores'
+                        style={{ fontFamily: 'Avenir, sans-serif' }}
+                        className={chipSelected === 'indicatorsView' ? 'active-chip' : 'inactive-chip'}
+                        onClick={this.setChip.bind(this, 'indicatorsView')}
+                      />
+                    </Tooltip>
+                  </div>
                 </div>
-                <div style={{ paddingLeft: '.5vw' }}>
-                  <Tooltip title="Veja os detalhes da situação de cada aluno" arrow>
-                    <Chip
-                      label='Alunos'
-                      className={chipSelected === 'studentsView' ? 'active-chip' : 'inactive-chip'}
-                      onClick={this.setChip.bind(this, 'studentsView')}
-                    />
-                  </Tooltip>
-                </div>
-                <div style={{ paddingLeft: '.5vw' }}>
-                  <Tooltip title="Veja as informações dos atributos dos alunos no AVA" arrow>
-                    <Chip
-                      label='Indicadores'
-                      className={chipSelected === 'indicatorsView' ? 'active-chip' : 'inactive-chip'}
-                      onClick={this.setChip.bind(this, 'indicatorsView')}
-                    />
-                  </Tooltip>
-                </div>
-              </div>
-            </Header>
-          </FullContainer>
+              </Header>
+            </FullContainer>
 
-          <FullContainer>
-            <HalfContent>
-              <Alert variant="filled" severity="success">
-                <AlertTitle>
-                  Desempenho Satisfatório
-                </AlertTitle>
-                <span style={{ fontSize: '30px', fontWeight: 'bold' }}>
-                  {prediction.data.percentageApproved} %
-                </span>
-              </Alert>
-            </HalfContent>
-            <HalfContent>
-              <Alert variant="filled" severity="error">
-                <AlertTitle>
-                  Desempenho Insatisfatório
-                </AlertTitle>
-                <span style={{ fontSize: '30px', fontWeight: 'bold' }}>
-                  {prediction.data.percentageDisapproved} %
-                </span>
-              </Alert>
-            </HalfContent>
-          </FullContainer>
+            <FullContainer>
+              <HalfContent>
+                <Alert variant="filled" severity="success">
+                  <AlertTitle>
+                    <span style={{ fontStyle: 'normal', fontWeight: 'normal', fontFamily: 'Avenir, sans-serif' }}>
+                      Desempenho Satisfatório
+                    </span>
+                  </AlertTitle>
+                  <span style={{ fontStyle: 'normal', fontSize: '30px', fontWeight: 'bold', fontFamily: 'Avenir, sans-serif' }}>
+                    {prediction.data.percentageApproved} %
+                  </span>
+                </Alert>
+              </HalfContent>
+              <HalfContent>
+                <Alert variant="filled" severity="error">
+                  <AlertTitle>
+                    <span style={{ fontStyle: 'normal', fontWeight: 'normal', fontFamily: 'Avenir, sans-serif' }}>
+                      Desempenho Insatisfatório
+                    </span>
+                  </AlertTitle>
+                  <span style={{ fontStyle: 'normal', fontSize: '30px', fontWeight: 'bold', fontFamily: 'Avenir, sans-serif' }}>
+                    {prediction.data.percentageDisapproved} %
+                  </span>
+                </Alert>
+              </HalfContent>
+            </FullContainer>
 
-          <FullContainer>
-            <HalfContent style={{ backgroundColor: 'white', borderRadius: '5px' }}>
-              <Plot
-                data={[
-                  this.getChartDataDynamically()
-                ]}
-                layout={
-                  this.getChartLayoutDynamically()
-                }
-                config={
-                  config
-                }
-                graphDiv='graph'
-              />
-            </HalfContent>
-
-            <HalfContent style={{ backgroundColor: 'white', borderRadius: '5px' }}>
-              <Plot
-                data={[
-                  this.getChartDataDynamically()
-                ]}
-                layout={
-                  this.getChartLayoutDynamically()
-                }
-                config={
-                  config
-                }
-                graphDiv='graph'
-              />
-            </HalfContent>
-          </FullContainer>
-
-          {/* <Content>
-            {prediction.data ?
-            <GraphContainer>
-              <FlexItem>
-                <SelectText>Gráfico</SelectText>
-                  <SelectContainer>
-                    <Select
-                      value={choosedChart}
-                      onChange={this.handleChartChange}
-                      placeholder={'Selecione o tipo do gráfico'}
-                      styles={selectStyle}
-                      options={chartOptions} />
-                  </SelectContainer>
-
+            {chipSelected === 'overallView' ? 
+            <div>
+              <FullContainer>
+                <HalfContent style={{ backgroundColor: 'white', borderRadius: '5px' }}>
                   <Plot
-                    data={[
-                      this.getChartDataDynamically()
-                    ]}
-                    layout={
-                      this.getChartLayoutDynamically()
+                    data={
+                      this.getChartDataDynamically('satisfactoryAndUnsatisfactory')
                     }
-                    config={config}
-                    graphDiv="graph"
+                    layout={
+                      this.getChartLayoutDynamically('satisfactoryAndUnsatisfactory')
+                    }
+                    config={
+                      config
+                    }
+                    graphDiv='graph'
                   />
-              </FlexItem>
-            </GraphContainer>
-            : null}
-          </Content> */}
+                </HalfContent>
 
-          {/* <Content>
-            {prediction.data ?
-              <TabsContainer>
-                <Tabs
-                  value={tabValue}
-                  indicatorColor="primary"
-                  textColor="primary"
-                  onChange={this.handleTabChange}
-                  centered
-                >
-                  <Tab label="Geral" />
-                  <Tab label="Detalhado" />
-                </Tabs>
+                <HalfContent style={{ backgroundColor: 'white', borderRadius: '5px' }}>
+                  <Plot
+                    data={
+                      this.getChartDataDynamically('allIndicatorsMean')
+                    }
+                    layout={
+                      this.getChartLayoutDynamically('allIndicatorsMean')
+                    }
+                    config={
+                      config
+                    }
+                    graphDiv='graph'
+                  />
+                </HalfContent>
+              </FullContainer>
 
-                {tabValue === 0 ?
-                  <GraphContainer>
-                    <FlexItem>
-                      <SelectText>Gráfico</SelectText>
-                        <SelectContainer>
-                          <Select
-                            value={choosedChart}
-                            onChange={this.handleChartChange}
-                            placeholder={'Selecione o tipo do gráfico'}
-                            styles={selectStyle}
-                            options={chartOptions} />
-                        </SelectContainer>
+              <FullContainer>
+                <HalfContent style={{ backgroundColor: 'white', borderRadius: '5px' }}>
+                  <Plot
+                    data={
+                      this.getChartDataDynamically('satisfactoryAndUnsatisfactory')
+                    }
+                    layout={
+                      this.getChartLayoutDynamically('satisfactoryAndUnsatisfactory')
+                    }
+                    config={
+                      config
+                    }
+                    graphDiv='graph'
+                  />
+                </HalfContent>
 
-                        <Plot
-                          data={[
-                            this.getChartDataDynamically()
-                          ]}
-                          layout={
-                            this.getChartLayoutDynamically()
-                          }
-                          config={config}
-                          graphDiv="graph"
-                        />
-                    </FlexItem>
-                  </GraphContainer>
-                : null}
+                <HalfContent style={{ backgroundColor: 'white', borderRadius: '5px' }}>
+                  <Plot
+                    data={
+                      this.getChartDataDynamically('satisfactoryAndUnsatisfactory')
+                    }
+                    layout={
+                      this.getChartLayoutDynamically('satisfactoryAndUnsatisfactory')
+                    }
+                    config={
+                      config
+                    }
+                    graphDiv='graph'
+                  />
+                </HalfContent>
+              </FullContainer>
+            </div> : null}
 
-                {tabValue === 1 ?
-                  <FlexInside>
-                    <LeftContentInside>
-                      <SelectText>Detalhar por</SelectText>
-                      <SelectContainer>
-                        <Select
-                          value={choosedDetailed}
-                          onChange={this.handleDetailedChange}
-                          styles={selectStyle}
-                          options={detailedOptions} />
-                      </SelectContainer>
+            {chipSelected === 'studentsView' ? 
+            <div>
+              <FullContainer>
+                <HalfContent style={{ backgroundColor: 'white', borderRadius: '5px' }}>
+                  <Plot
+                    data={
+                      this.getChartDataDynamically('satisfactoryAndUnsatisfactory')
+                    }
+                    layout={
+                      this.getChartLayoutDynamically('satisfactoryAndUnsatisfactory')
+                    }
+                    config={
+                      config
+                    }
+                    graphDiv='graph'
+                  />
+                </HalfContent>
 
-                      {choosedDetailed.value === 'byStudent' ?
-                        <div>
-                          <SelectText>Aluno</SelectText>
+                <HalfContent style={{ backgroundColor: 'white', borderRadius: '5px' }}>
+                  <Plot
+                    data={
+                      this.getChartDataDynamically('satisfactoryAndUnsatisfactory')
+                    }
+                    layout={
+                      this.getChartLayoutDynamically('satisfactoryAndUnsatisfactory')
+                    }
+                    config={
+                      config
+                    }
+                    graphDiv='graph'
+                  />
+                </HalfContent>
+              </FullContainer>
+            </div> : null}
+
+            {chipSelected === 'indicatorsView' ? 
+            <div>
+              <FullContainer>
+                <HalfContent style={{ backgroundColor: 'white', borderRadius: '5px' }}>
+                  <Plot
+                    data={
+                      this.getChartDataDynamically('satisfactoryAndUnsatisfactory')
+                    }
+                    layout={
+                      this.getChartLayoutDynamically('satisfactoryAndUnsatisfactory')
+                    }
+                    config={
+                      config
+                    }
+                    graphDiv='graph'
+                  />
+                </HalfContent>
+
+                <HalfContent style={{ backgroundColor: 'white', borderRadius: '5px' }}>
+                  <Plot
+                    data={
+                      this.getChartDataDynamically('satisfactoryAndUnsatisfactory')
+                    }
+                    layout={
+                      this.getChartLayoutDynamically('satisfactoryAndUnsatisfactory')
+                    }
+                    config={
+                      config
+                    }
+                    graphDiv='graph'
+                  />
+                </HalfContent>
+              </FullContainer>
+            </div> : null}
+
+            {/* <Content>
+              {prediction.data ?
+              <GraphContainer>
+                <FlexItem>
+                  <SelectText>Gráfico</SelectText>
+                    <SelectContainer>
+                      <Select
+                        value={choosedChart}
+                        onChange={this.handleChartChange}
+                        placeholder={'Selecione o tipo do gráfico'}
+                        styles={selectStyle}
+                        options={chartOptions} />
+                    </SelectContainer>
+
+                    <Plot
+                      data={[
+                        this.getChartDataDynamically()
+                      ]}
+                      layout={
+                        this.getChartLayoutDynamically()
+                      }
+                      config={config}
+                      graphDiv="graph"
+                    />
+                </FlexItem>
+              </GraphContainer>
+              : null}
+            </Content> */}
+
+            {/* <Content>
+              {prediction.data ?
+                <TabsContainer>
+                  <Tabs
+                    value={tabValue}
+                    indicatorColor="primary"
+                    textColor="primary"
+                    onChange={this.handleTabChange}
+                    centered
+                  >
+                    <Tab label="Geral" />
+                    <Tab label="Detalhado" />
+                  </Tabs>
+
+                  {tabValue === 0 ?
+                    <GraphContainer>
+                      <FlexItem>
+                        <SelectText>Gráfico</SelectText>
                           <SelectContainer>
                             <Select
-                              value={choosedStudent}
-                              onChange={this.handleStudentChange}
-                              placeholder={'Selecione o aluno'}
+                              value={choosedChart}
+                              onChange={this.handleChartChange}
+                              placeholder={'Selecione o tipo do gráfico'}
                               styles={selectStyle}
-                              options={studentOptions} />
+                              options={chartOptions} />
                           </SelectContainer>
-      
-                          <SelectText>Variáveis</SelectText>
-                          <SelectContainer>
-                            <Select
-                              isMulti
-                              isClearable
-                              value={choosedVariable}
-                              onChange={this.handleVariableChange}
-                              placeholder={'Selecione as variáveis'}
-                              styles={selectStyle}
-                              options={variableOptions} />
-                          </SelectContainer>
-                          {predictionInfoText && predictionInfoText === 'Aprovado' ?
-                              <Alert variant="outlined" severity="success">
-                              Predição: Aprovado
-                              </Alert>
-                          : null}
-                          {predictionInfoText && predictionInfoText === 'Reprovado' ?
-                              <Alert variant="outlined" severity="error">
-                              Predição: Reprovado
-                              </Alert>
-                          : null}
-                        </div>
-                      : null}
 
-                      {choosedDetailed.value === 'byVariable' ?
-                        <div>
-                          <SelectText>Alunos</SelectText>
-                          <SelectContainer>
-                            <Select
-                              isMulti
-                              isClearable
-                              value={choosedStudent}
-                              onChange={this.handleStudentChange}
-                              placeholder={'Selecione os alunos'}
-                              styles={selectStyle}
-                              options={studentOptions} />
-                          </SelectContainer>
-      
-                          <SelectText>Variável</SelectText>
-                          <SelectContainer>
-                            <Select
-                              value={choosedVariable}
-                              onChange={this.handleVariableChange}
-                              placeholder={'Selecione a variável'}
-                              styles={selectStyle}
-                              options={variableOptions} />
-                          </SelectContainer>
-                          {predictionInfoText ?
-                              <Alert variant="outlined" severity="info">
-                              {predictionInfoText}
-                              </Alert>
-                          : null}
-                        </div>
-                      : null}
-                    </LeftContentInside>
-
-                    {choosedStudent && choosedVariable && !loadingChart ?
-                      <GraphContainerInside>
-                        <FlexItem>
                           <Plot
-                            data={
-                              detailedChartData
-                            }
+                            data={[
+                              this.getChartDataDynamically()
+                            ]}
                             layout={
-                              detailedChartLayout
+                              this.getChartLayoutDynamically()
                             }
                             config={config}
                             graphDiv="graph"
                           />
-                        </FlexItem>
-                      </GraphContainerInside>
-                    : null }
-                  </FlexInside>
-                : null}
-              </TabsContainer>
-            : null}
+                      </FlexItem>
+                    </GraphContainer>
+                  : null}
 
-            {prediction.loading ?
-              <ExternalLoadingContainer>
-                <LoadingContainer>
-                  <ProgressSpinner style={{ width: '70px', height: '70px' }} strokeWidth="4" fill="#EEEEEE" animationDuration=".5s" />
-                </LoadingContainer>
-              </ExternalLoadingContainer>
+                  {tabValue === 1 ?
+                    <FlexInside>
+                      <LeftContentInside>
+                        <SelectText>Detalhar por</SelectText>
+                        <SelectContainer>
+                          <Select
+                            value={choosedDetailed}
+                            onChange={this.handleDetailedChange}
+                            styles={selectStyle}
+                            options={detailedOptions} />
+                        </SelectContainer>
+
+                        {choosedDetailed.value === 'byStudent' ?
+                          <div>
+                            <SelectText>Aluno</SelectText>
+                            <SelectContainer>
+                              <Select
+                                value={choosedStudent}
+                                onChange={this.handleStudentChange}
+                                placeholder={'Selecione o aluno'}
+                                styles={selectStyle}
+                                options={studentOptions} />
+                            </SelectContainer>
+        
+                            <SelectText>Variáveis</SelectText>
+                            <SelectContainer>
+                              <Select
+                                isMulti
+                                isClearable
+                                value={choosedVariable}
+                                onChange={this.handleVariableChange}
+                                placeholder={'Selecione as variáveis'}
+                                styles={selectStyle}
+                                options={variableOptions} />
+                            </SelectContainer>
+                            {predictionInfoText && predictionInfoText === 'Aprovado' ?
+                                <Alert variant="outlined" severity="success">
+                                Predição: Aprovado
+                                </Alert>
+                            : null}
+                            {predictionInfoText && predictionInfoText === 'Reprovado' ?
+                                <Alert variant="outlined" severity="error">
+                                Predição: Reprovado
+                                </Alert>
+                            : null}
+                          </div>
+                        : null}
+
+                        {choosedDetailed.value === 'byVariable' ?
+                          <div>
+                            <SelectText>Alunos</SelectText>
+                            <SelectContainer>
+                              <Select
+                                isMulti
+                                isClearable
+                                value={choosedStudent}
+                                onChange={this.handleStudentChange}
+                                placeholder={'Selecione os alunos'}
+                                styles={selectStyle}
+                                options={studentOptions} />
+                            </SelectContainer>
+        
+                            <SelectText>Variável</SelectText>
+                            <SelectContainer>
+                              <Select
+                                value={choosedVariable}
+                                onChange={this.handleVariableChange}
+                                placeholder={'Selecione a variável'}
+                                styles={selectStyle}
+                                options={variableOptions} />
+                            </SelectContainer>
+                            {predictionInfoText ?
+                                <Alert variant="outlined" severity="info">
+                                {predictionInfoText}
+                                </Alert>
+                            : null}
+                          </div>
+                        : null}
+                      </LeftContentInside>
+
+                      {choosedStudent && choosedVariable && !loadingChart ?
+                        <GraphContainerInside>
+                          <FlexItem>
+                            <Plot
+                              data={
+                                detailedChartData
+                              }
+                              layout={
+                                detailedChartLayout
+                              }
+                              config={config}
+                              graphDiv="graph"
+                            />
+                          </FlexItem>
+                        </GraphContainerInside>
+                      : null }
+                    </FlexInside>
+                  : null}
+                </TabsContainer>
               : null}
-          </Content> */}
-        </DashboardMainContainer>
-        : null }
 
-        {prediction.loading ?
-        <ExternalLoadingContainer>
-          <LoadingContainer>
-            <ProgressSpinner style={{ width: '70px', height: '70px' }} strokeWidth="4" fill="#EEEEEE" animationDuration=".5s" />
-          </LoadingContainer>
-        </ExternalLoadingContainer>
-        : null}
-      </MainContainer>
+              {prediction.loading ?
+                <ExternalLoadingContainer>
+                  <LoadingContainer>
+                    <ProgressSpinner style={{ width: '70px', height: '70px' }} strokeWidth="4" fill="#EEEEEE" animationDuration=".5s" />
+                  </LoadingContainer>
+                </ExternalLoadingContainer>
+                : null}
+            </Content> */}
+          </DashboardMainContainer>
+          : null }
+
+          {prediction.loading ?
+          <ExternalLoadingContainer>
+            <LoadingContainer>
+              <ProgressSpinner style={{ width: '70px', height: '70px' }} strokeWidth="4" fill="#EEEEEE" animationDuration=".5s" />
+            </LoadingContainer>
+          </ExternalLoadingContainer>
+          : null}
+        </MainContainer>
+      </PerfectScrollbar>
     )
   }
 }

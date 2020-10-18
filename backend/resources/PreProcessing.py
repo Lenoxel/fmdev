@@ -131,8 +131,8 @@ class PreProcessing(Resource):
         if 'semesters' in payload and type(payload['semesters']) == list and len(payload['semesters']) > 0:
             query_where += f"""{where} semestre IN ({utils.list_to_sql_string(payload['semesters'])}) """
 
-        if fields != '*':
-            group_by = f"GROUP BY {fields}"
+        # if fields != '*':
+        #     group_by = f"GROUP BY {fields}"
 
         query = f"""
                     SELECT
