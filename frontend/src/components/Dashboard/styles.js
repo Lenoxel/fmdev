@@ -86,7 +86,7 @@ export const Content = styled.div`
   padding-top: 0;
   /* width: 50%; */
   margin: 0 10px;
-  margin: 0 2rem 1rem;
+  /* margin: 0 2rem 1rem; */
 `;
 
 export const HalfContent = styled.div`
@@ -95,6 +95,11 @@ export const HalfContent = styled.div`
   width: 50%;
   margin: 0 10px;
   /* margin: 0 2rem 1rem; */
+`;
+
+export const CustomizedContent = styled.div`
+  padding-top: 0;
+  margin: 0 10px;
 `;
 
 export const Separator = styled.div`

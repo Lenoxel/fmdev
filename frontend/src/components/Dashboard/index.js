@@ -17,7 +17,7 @@ import { Creators as PredictionActions } from '../../store/ducks/prediction';
 import { Creators as StudentActions } from '../../store/ducks/student';
 import { Creators as PeriodActions } from '../../store/ducks/period';
 
-import { LeftContent, SelectContainer, Content, HalfContent, GraphContainer, GraphContainerInside, FlexItem, TabsContainer, ExternalLoadingContainer, LeftContentInside, FlexInside, AsideContainer, MainContainer, DashboardMainContainer, FullContainer } from './styles';
+import { LeftContent, SelectContainer, Content, HalfContent, CustomizedContent, GraphContainer, GraphContainerInside, FlexItem, TabsContainer, ExternalLoadingContainer, LeftContentInside, FlexInside, AsideContainer, MainContainer, DashboardMainContainer, FullContainer } from './styles';
 import Select from 'react-select';
 import Button from '../../styles/Button';
 
@@ -28,6 +28,14 @@ import { Alert, AlertTitle } from '@material-ui/lab';
 import Chip from '@material-ui/core/Chip';
 import Tooltip from '@material-ui/core/Tooltip';
 import MonitorIcon from 'react-feather/dist/icons/monitor';
+
+import Table from '@material-ui/core/Table';
+import TableBody from '@material-ui/core/TableBody';
+import TableCell from '@material-ui/core/TableCell';
+import TableContainer from '@material-ui/core/TableContainer';
+import TableHead from '@material-ui/core/TableHead';
+import TableRow from '@material-ui/core/TableRow';
+import Paper from '@material-ui/core/Paper';
 
 // simplest method: uses precompiled complete bundle from `plotly.js`
 // import Plot from 'react-plotly.js';
@@ -78,7 +86,7 @@ class Dashboard extends Component {
       'var12': 'Número de vezes que a seção "Conteúdos" (que lista os arquivos que descrevem o programa do curso) foi visualizada.',
       'var13': 'Hora do dia em que o aluno mais frequentemente trabalha em suas atribuições/exercícios.',
       'var14': 'Período do dia (manhã, tarde, anoitecer, noite) na qual o aluno mais frequentemente trabalhou em suas atribuições/exercícios.',
-      'var16': 'Número de atribuições/exercícios entregues pelo aluno após o prazo, por curso.',
+      'var16': 'Número de atribuições/exercícios entregues pelo aluno após o prazo.',
       'var17': 'Tempo médio entre o momento em que uma atividade foi atribuída e em que o aluno a completou.',
       'var18': 'Número de vezes que o aluno acessa o fórum (pageviews)',
       'var20': 'Número de respostas em uma thread no fórum (denota a ação de reconsiderar a opinião sobre o assunto).',
@@ -96,7 +104,7 @@ class Dashboard extends Component {
       'var32b': 'Número de vezes em que o aluno acessou o AVA por período do dia (tardes).',
       'var32c': 'Número de vezes em que o aluno acessou o AVA por período do dia (fins de tardes).',
       'var32d': 'Número de vezes em que o aluno acessou o AVA por período do dia (noites).',
-      'var33': 'Número de atividades/atribuições entregues por um aluno dentro do prazo, por curso.',
+      'var33': 'Número de atividades/atribuições entregues por um aluno dentro do prazo.',
       'var34': 'Número total de mensagens postadas pelo aluno nos fóruns.',
       'var35': 'Número de respostas de um professor para perguntas do aluno em fóruns.',
     },
@@ -119,10 +127,14 @@ class Dashboard extends Component {
     // const { phenomenonSelected, courseSelected, subjectSelected, semesterSelected, periodSelected, studentSelected } = this.props.indicator;
 
     if (name === 'courseSelected') {
+      this.props.setIndicator('subjectSelected', null);
+      this.props.setIndicator('semesterSelected', null);
+      this.props.setIndicator('studentSelected', null);
+      this.props.subjectSuccess([]);
+      this.props.semesterSuccess([]);
+      this.props.studentSuccess([]);
+
       if (!item || !item.label || !item.value) {
-        this.props.subjectSuccess([]);
-        this.props.semesterSuccess([]);
-        this.props.studentSuccess([]);
         return;
       }
 
@@ -132,13 +144,16 @@ class Dashboard extends Component {
     }
 
     if (name === 'subjectSelected') {
+      this.props.setIndicator('semesterSelected', null);
+      this.props.setIndicator('studentSelected', null);
+      this.props.studentSuccess([]);
+      this.props.semesterSuccess([]);
+
       const { courseSelected } = this.props.indicator;
 
       let courses, subjects;
 
       if ((!item || !item.label || !item.value)) {
-        this.props.studentSuccess([]);
-        this.props.semesterSuccess([]);
         return;
       }
 
@@ -166,13 +181,14 @@ class Dashboard extends Component {
     }
 
     if (name === 'semesterSelected') {
+      this.props.setIndicator('studentSelected', null);
+      this.props.studentSuccess([]);
+
       const { courseSelected, subjectSelected } = this.props.indicator;
 
       let courses, subjects, semesters;
 
       if ((!item || !item.label || !item.value) && (!subjectSelected || !subjectSelected.label || !subjectSelected.value)) {
-        // this.props.periodSuccess([]);
-        this.props.studentSuccess([]);
         return;
       } 
         
@@ -660,7 +676,6 @@ class Dashboard extends Component {
     const { prediction } = this.props;
 
     let indicators = prediction.data.indicators;
-    indicators = indicators.split(', ');
 
     let indicatorSatisfactoryMeans = [];
     let indicatorUnsatisfactoryMeans = [];
@@ -695,10 +710,10 @@ class Dashboard extends Component {
       type: 'bar',
       x: indicatorSatisfactoryMeans,
       y: indicators,
-      name: 'Aprovados',
+      name: 'Satisfatório',
       marker: {
         color: 'green',
-        width: 1
+        width: 2
       },
       orientation: 'h',
     };
@@ -707,10 +722,10 @@ class Dashboard extends Component {
       type: 'bar',
       x: indicatorUnsatisfactoryMeans,
       y: indicators,
-      name: 'Reprovados',
+      name: 'Insatisfatório',
       marker: {
         color: 'red',
-        width: 1
+        width: 2
       },
       orientation: 'h',
     };
@@ -743,7 +758,7 @@ class Dashboard extends Component {
     let countOnes = prediction.data.countApproved;
 
     const barChartDataDynamic = {
-      x: ['Aprovados', 'Reprovados'],
+      x: ['Satisfatório', 'Insatisfatório'],
       y: [countOnes, countZeros],
       marker:{
         color: ['green', 'red'],
@@ -785,7 +800,7 @@ class Dashboard extends Component {
 
     const pieChartDataDynamic = {
       values: [countOnes, countZeros],
-      labels: ['Aprovados', 'Reprovados'],
+      labels: ['Satisfatório', 'Insatisfatório'],
       marker:{
         colors: ['green', 'red'],
       },
@@ -808,11 +823,38 @@ class Dashboard extends Component {
     return pieChartLayoutDynamic;
   }
 
+  renderIndicatorsMeaningTable = () => {
+    const { prediction: { data: { indicators } } } = this.props;
+
+    const { mappedVariablesMeaning } = this.state;
+
+    return (
+      <Table stickyHeader aria-label="Indicators meaning table" size="small">
+        <TableHead>
+          <TableRow>
+            <TableCell style={{ fontFamily: 'Avenir, sans-serif', fontWeight: 'bold' }}>Indicador</TableCell>
+            <TableCell style={{ fontFamily: 'Avenir, sans-serif', fontWeight: 'bold' }}>Significado</TableCell>
+          </TableRow>
+        </TableHead>
+        <TableBody>
+          {indicators.map((indicator) => (
+            <TableRow key={indicator}>
+              <TableCell component="th" scope="row"  style={{ fontFamily: 'Avenir, sans-serif' }}>
+                {indicator}
+              </TableCell>
+              <TableCell  style={{ fontFamily: 'Avenir, sans-serif' }}>{mappedVariablesMeaning[indicator]}</TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    )
+  }
+
   render() {
     const { course, subject, semester, phenomenon, prediction, period, student } = this.props;
-    const { courseSelected, subjectSelected, semesterSelected, phenomenonSelected, periodSelected, studentSelected } = this.props.indicator;
+    const { courseSelected, subjectSelected, semesterSelected, phenomenonSelected, periodSelected, studentSelected,  } = this.props.indicator;
     const { 
-      config, tabValue, chartOptions, choosedChart, studentOptions, choosedStudent, variableOptions, choosedVariable, detailedOptions, choosedDetailed, detailedChartData, detailedChartLayout, loadingChart, predictionInfoText, chipSelected
+      config, tabValue, chartOptions, choosedChart, studentOptions, choosedStudent, variableOptions, choosedVariable, detailedOptions, choosedDetailed, detailedChartData, detailedChartLayout, loadingChart, predictionInfoText, chipSelected,
     } = this.state;
 
     return (
@@ -951,35 +993,40 @@ class Dashboard extends Component {
               </Header>
             </FullContainer>
 
-            <FullContainer>
-              <HalfContent>
-                <Alert variant="filled" severity="success">
-                  <AlertTitle>
-                    <span style={{ fontStyle: 'normal', fontWeight: 'normal', fontFamily: 'Avenir, sans-serif' }}>
-                      Desempenho Satisfatório
-                    </span>
-                  </AlertTitle>
-                  <span style={{ fontStyle: 'normal', fontSize: '30px', fontWeight: 'bold', fontFamily: 'Avenir, sans-serif' }}>
-                    {prediction.data.percentageApproved} %
-                  </span>
-                </Alert>
-              </HalfContent>
-              <HalfContent>
-                <Alert variant="filled" severity="error">
-                  <AlertTitle>
-                    <span style={{ fontStyle: 'normal', fontWeight: 'normal', fontFamily: 'Avenir, sans-serif' }}>
-                      Desempenho Insatisfatório
-                    </span>
-                  </AlertTitle>
-                  <span style={{ fontStyle: 'normal', fontSize: '30px', fontWeight: 'bold', fontFamily: 'Avenir, sans-serif' }}>
-                    {prediction.data.percentageDisapproved} %
-                  </span>
-                </Alert>
-              </HalfContent>
-            </FullContainer>
-
             {chipSelected === 'overallView' ? 
             <div>
+              <FullContainer>
+                <HalfContent style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <Alert variant="filled" severity="success" style={{ textAlign: 'center' }}>
+                    <AlertTitle>
+                      <span style={{ fontStyle: 'normal', fontWeight: 'bold', fontFamily: 'Avenir, sans-serif' }}>
+                        Desempenho Satisfatório
+                      </span>
+                    </AlertTitle>
+                    <div style={{ fontStyle: 'normal', fontSize: '30px', fontWeight: 'bold', fontFamily: 'Avenir, sans-serif', marginTop: '10%' }}>
+                      {prediction.data.percentageApproved} %
+                    </div>
+                  </Alert>
+
+                  <Alert variant="filled" severity="error" style={{ textAlign: 'center' }}>
+                    <AlertTitle>
+                      <span style={{ fontStyle: 'normal', fontWeight: 'bold', fontFamily: 'Avenir, sans-serif' }}>
+                        Desempenho Insatisfatório
+                      </span>
+                    </AlertTitle>
+                    <div style={{ fontStyle: 'normal', fontSize: '30px', fontWeight: 'bold', fontFamily: 'Avenir, sans-serif', marginTop: '10%' }}>
+                      {prediction.data.percentageDisapproved} %
+                    </div>
+                  </Alert>
+                </HalfContent>
+
+                <HalfContent>
+                <TableContainer component={Paper} style={{ maxHeight: '130px' }}>
+                  {this.renderIndicatorsMeaningTable()}
+                </TableContainer>
+                </HalfContent>
+              </FullContainer>
+
               <FullContainer>
                 <HalfContent style={{ backgroundColor: 'white', borderRadius: '5px' }}>
                   <Plot
@@ -1003,38 +1050,6 @@ class Dashboard extends Component {
                     }
                     layout={
                       this.getChartLayoutDynamically('allIndicatorsMean')
-                    }
-                    config={
-                      config
-                    }
-                    graphDiv='graph'
-                  />
-                </HalfContent>
-              </FullContainer>
-
-              <FullContainer>
-                <HalfContent style={{ backgroundColor: 'white', borderRadius: '5px' }}>
-                  <Plot
-                    data={
-                      this.getChartDataDynamically('satisfactoryAndUnsatisfactory')
-                    }
-                    layout={
-                      this.getChartLayoutDynamically('satisfactoryAndUnsatisfactory')
-                    }
-                    config={
-                      config
-                    }
-                    graphDiv='graph'
-                  />
-                </HalfContent>
-
-                <HalfContent style={{ backgroundColor: 'white', borderRadius: '5px' }}>
-                  <Plot
-                    data={
-                      this.getChartDataDynamically('satisfactoryAndUnsatisfactory')
-                    }
-                    layout={
-                      this.getChartLayoutDynamically('satisfactoryAndUnsatisfactory')
                     }
                     config={
                       config

@@ -156,7 +156,9 @@ class Predict(Resource):
 
             count_approved, percentage_approved, count_disapproved, percentage_disapproved = self.count_approved_and_disapproved(predicted_data)
 
-            return { 'predictedData': predicted_data, 'realData': real_data, 'indicators': variables, 'countApproved': count_approved, 'percentageApproved': percentage_approved, 'countDisapproved': count_disapproved, 'percentageDisapproved': percentage_disapproved}
+            indicators = variables.split(', ')
+
+            return { 'predictedData': predicted_data, 'realData': real_data, 'indicators': indicators, 'countApproved': count_approved, 'percentageApproved': percentage_approved, 'countDisapproved': count_disapproved, 'percentageDisapproved': percentage_disapproved}
         except:
             traceback.print_exc()
             return {"msg": "Error on GET Copy"}, 500
