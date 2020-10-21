@@ -661,6 +661,8 @@ class Dashboard extends Component {
       return this.getSatisfactoryAndUnsatisfactoryChartDataDynamic();
     } else if (chartType === 'allIndicatorsMean') {
       return this.getAllIndicatorsMeanChartDataDynamic();
+    } else if (chartType === 'gradeAndForumAndWebquest') {
+      return this.getGradeAndForumAndWebquestChartDataDynamic();
     }
   }
 
@@ -669,7 +671,110 @@ class Dashboard extends Component {
       return this.getSatisfactoryAndUnsatisfactoryChartLayoutDynamic();
     } else if (chartType === 'allIndicatorsMean') {
       return this.getAllIndicatorsMeanChartLayoutDynamic();
+    } else if (chartType === 'gradeAndForumAndWebquest') {
+      return this.getGradeAndForumAndWebquestChartDataLayout();
     }
+  }
+
+  getGradeAndForumAndWebquestChartDataDynamic = () => {
+    const { prediction } = this.props;
+
+    let currentAssessments = prediction.data.assessmentVariables;
+
+    let availableGrades = [];
+    let availableGradeSizes = [];
+    let availableGradeTexts = [];
+    let availableForums = [];
+    let availableWebquests = [];
+    let studentPredictionResults = [];
+
+    for (const [index, currentAssessment] of currentAssessments.entries()) {
+      if (currentAssessment['media_webquest'] > 0) {
+        availableWebquests.push(currentAssessment['media_webquest']);
+      } else if (currentAssessment['webquest01'] > 0) {
+        availableWebquests.push(currentAssessment['webquest01']);
+      } else {
+        availableWebquests.push(0);
+      }
+
+      if (currentAssessment['media_forum'] > 0) {
+        availableForums.push(currentAssessment['media_forum']);
+      } else if (currentAssessment['forum04'] > 0) {
+        const currentForumMean = ((currentAssessment['forum04'] + currentAssessment['forum03'] + currentAssessment['forum02'] + currentAssessment['forum01']) / 4).toFixed(2);
+        availableForums.push(currentForumMean);
+      } else if (currentAssessment['forum03'] > 0) {
+        const currentForumMean = ((currentAssessment['forum03'] + currentAssessment['forum02'] + currentAssessment['forum01']) / 3).toFixed(2);
+        availableForums.push(currentForumMean);
+      } else if (currentAssessment['forum02'] > 0) {
+        const currentForumMean = ((currentAssessment['forum02'] + currentAssessment['forum01']) / 2).toFixed(2);
+        availableForums.push(currentForumMean);
+      } else if (currentAssessment['forum01'] > 0) {
+        const currentForumMean = currentAssessment['forum01'].toFixed(2);
+        availableForums.push(currentForumMean);
+      } else {
+        availableForums.push(0);
+      }
+
+      if (currentAssessment['media_provas'] > 0) {
+        availableGrades.push(currentAssessment['media_provas']);
+      } else if (currentAssessment['primeira_prova'] > 0) {
+        availableGrades.push(currentAssessment['primeira_prova']);
+      } else {
+        availableGrades.push(0);
+      }
+
+      const studentPredictionResult = prediction.data.predictedData[index];
+      
+      if (studentPredictionResult === 0) {
+        studentPredictionResults.push('red');
+      } else if (studentPredictionResult === 1) {
+        studentPredictionResults.push('green');
+      }
+    }
+
+    availableGradeSizes = availableGrades.map(availableGrade => availableGrade * 10);
+
+    availableGradeTexts = availableGrades.map((availableGrade, index) => {
+      const currentStudentName = currentAssessments[index]['nome_do_aluno'];
+      return `${currentStudentName}<br>Nota da prova: ${availableGrade}`;
+    });
+
+    const trace = {
+      x: availableForums,
+      y: availableWebquests,
+      text: availableGradeTexts,
+      mode: 'markers',
+      marker: {
+        color: studentPredictionResults,
+        size: availableGradeSizes
+      },
+    };
+    
+    const data = [trace];
+
+    return data;
+  }
+
+  getGradeAndForumAndWebquestChartDataLayout = () => {
+    const bubbleChartLayoutDinamic = {
+      title: 'Situação atual dos alunos',
+      // autosize: false,
+      // showlegend: false,
+      width: 1000, 
+      height: 600,
+      font: {
+        family: 'Avenir, sans-serif',
+        size: 15,
+      },
+      xaxis: {
+        title: 'Nota do fórum',
+      },
+      yaxis: {
+        title: 'Nota do webquest',
+      },
+    };
+
+    return bubbleChartLayoutDinamic;
   }
 
   getAllIndicatorsMeanChartDataDynamic = () => {
@@ -743,7 +848,8 @@ class Dashboard extends Component {
         automargin: true,
       },
       font: {
-        family: 'Avenir, sans-serif'  
+        family: 'Avenir, sans-serif',
+        size: 15,
       },
       barmode: 'stack',
     };
@@ -779,7 +885,8 @@ class Dashboard extends Component {
         automargin: true,
       },
       font: {
-        family: 'Avenir, sans-serif'  
+        family: 'Avenir, sans-serif',
+        size: 15,  
       },
     };
 
@@ -829,7 +936,10 @@ class Dashboard extends Component {
     const { mappedVariablesMeaning } = this.state;
 
     return (
-      <Table stickyHeader aria-label="Indicators meaning table" size="small">
+      <Table 
+        // stickyHeader 
+        aria-label="Indicators meaning table" 
+        size="small">
         <TableHead>
           <TableRow>
             <TableCell style={{ fontFamily: 'Avenir, sans-serif', fontWeight: 'bold' }}>Indicador</TableCell>
@@ -858,8 +968,8 @@ class Dashboard extends Component {
     } = this.state;
 
     return (
-      <PerfectScrollbar style={{ width: '100%', overflowX: 'auto' }}>
-        <MainContainer >
+      <PerfectScrollbar style={{ width: '100%', overflowX: 'auto', background: 'lightskyblue'}}>
+        <MainContainer>
           <AsideContainer>
             <LeftContent>
               <Header>
@@ -1003,7 +1113,7 @@ class Dashboard extends Component {
                         Desempenho Satisfatório
                       </span>
                     </AlertTitle>
-                    <div style={{ fontStyle: 'normal', fontSize: '30px', fontWeight: 'bold', fontFamily: 'Avenir, sans-serif', marginTop: '10%' }}>
+                    <div style={{ fontStyle: 'normal', fontSize: '30px', fontWeight: 'bold', fontFamily: 'Avenir, sans-serif', marginTop: '12%' }}>
                       {prediction.data.percentageApproved} %
                     </div>
                   </Alert>
@@ -1014,20 +1124,20 @@ class Dashboard extends Component {
                         Desempenho Insatisfatório
                       </span>
                     </AlertTitle>
-                    <div style={{ fontStyle: 'normal', fontSize: '30px', fontWeight: 'bold', fontFamily: 'Avenir, sans-serif', marginTop: '10%' }}>
+                    <div style={{ fontStyle: 'normal', fontSize: '30px', fontWeight: 'bold', fontFamily: 'Avenir, sans-serif', marginTop: '12%' }}>
                       {prediction.data.percentageDisapproved} %
                     </div>
                   </Alert>
                 </HalfContent>
 
                 <HalfContent>
-                <TableContainer component={Paper} style={{ maxHeight: '130px' }}>
-                  {this.renderIndicatorsMeaningTable()}
-                </TableContainer>
+                  <TableContainer component={Paper} style={{ maxHeight: '135px', borderRadius: '5px' }}>
+                    {this.renderIndicatorsMeaningTable()}
+                  </TableContainer>
                 </HalfContent>
               </FullContainer>
 
-              <FullContainer>
+              <FullContainer style={{ textAlign: 'center' }}>
                 <HalfContent style={{ backgroundColor: 'white', borderRadius: '5px' }}>
                   <Plot
                     data={
@@ -1057,6 +1167,23 @@ class Dashboard extends Component {
                     graphDiv='graph'
                   />
                 </HalfContent>
+              </FullContainer>
+
+              <FullContainer style={{ justifyContent: 'center' }}>
+                <Content style={{ backgroundColor: 'white', borderRadius: '5px' }}>
+                  <Plot
+                    data={
+                      this.getChartDataDynamically('gradeAndForumAndWebquest')
+                    }
+                    layout={
+                      this.getChartLayoutDynamically('gradeAndForumAndWebquest')
+                    }
+                    config={
+                      config
+                    }
+                    graphDiv='graph'
+                  />
+                </Content>
               </FullContainer>
             </div> : null}
 

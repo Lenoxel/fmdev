@@ -108,16 +108,18 @@ class Predict(Resource):
 
         data = utils.execute_query(query)
 
-        # query_relevant_variables = f"""SELECT
-        #                 id_do_aluno, nome_do_aluno,
-        #                 prova01, prova01_2chamada, prova02, prova02_2chamada, media_provas,
-        #                 forum01, forum02, forum03, forum04, media_forum,
-        #                 webquest01, webquest02, media_webquest
-        #             FROM
-        #                 moodle
-        #             {where_clousure}
-        #             ORDER BY
-        #                 "nome_do_aluno" ASC, "ctid" ASC"""
+        query_assessment_variables = f"""SELECT
+                        id_do_aluno, nome_do_aluno,
+                        primeira_prova, segunda_prova, media_provas,
+                        forum01, forum02, forum03, forum04, media_forum,
+                        webquest01, webquest02, media_webquest
+                    FROM
+                        moodle
+                    {where_clousure}
+                    ORDER BY
+                        "nome_do_aluno" ASC, "ctid" ASC"""
+
+        assessment_variables = utils.execute_query(query_assessment_variables)
 
         query_relevant_variables = f"""SELECT
                         id_do_aluno, nome_do_aluno
@@ -129,7 +131,7 @@ class Predict(Resource):
 
         relevant_variables = utils.execute_query(query_relevant_variables)
 
-        return data, relevant_variables
+        return data, relevant_variables, assessment_variables
 
 
     def post(self, key):
@@ -144,7 +146,7 @@ class Predict(Resource):
 
             payload = request.get_json()
 
-            query_select_response, relevant_variables = self.get_payload(variables, payload)
+            query_select_response, relevant_variables, assessment_variables = self.get_payload(variables, payload)
 
             x_test = pd.DataFrame(query_select_response)
             model = self.load_model(filename=key)
@@ -158,7 +160,7 @@ class Predict(Resource):
 
             indicators = variables.split(', ')
 
-            return { 'predictedData': predicted_data, 'realData': real_data, 'indicators': indicators, 'countApproved': count_approved, 'percentageApproved': percentage_approved, 'countDisapproved': count_disapproved, 'percentageDisapproved': percentage_disapproved}
+            return { 'predictedData': predicted_data, 'realData': real_data, 'indicators': indicators, 'countApproved': count_approved, 'percentageApproved': percentage_approved, 'countDisapproved': count_disapproved, 'percentageDisapproved': percentage_disapproved, 'assessmentVariables': assessment_variables}
         except:
             traceback.print_exc()
             return {"msg": "Error on GET Copy"}, 500

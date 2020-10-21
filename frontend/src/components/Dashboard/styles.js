@@ -82,7 +82,7 @@ export const SelectContainer = styled.div`
 `;
 
 export const Content = styled.div`
-  display: flex;
+  /* display: flex; */
   padding-top: 0;
   /* width: 50%; */
   margin: 0 10px;
