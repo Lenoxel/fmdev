@@ -671,8 +671,6 @@ class Dashboard extends Component {
       return this.getSatisfactoryAndUnsatisfactoryChartLayoutDynamic();
     } else if (chartType === 'allIndicatorsMean') {
       return this.getAllIndicatorsMeanChartLayoutDynamic();
-    } else if (chartType === 'gradeAndForumAndWebquest') {
-      return this.getGradeAndForumAndWebquestChartDataLayout();
     }
   }
 
@@ -688,41 +686,14 @@ class Dashboard extends Component {
     let availableWebquests = [];
     let studentPredictionResults = [];
 
+    let satisfactoryWebquest = [];
+    let unsatisfactoryWebquest = [];
+    let satisfactoryForum = [];
+    let unsatisfactoryForum = [];
+    let satisfactoryGrade = [];
+    let unsatisfactoryGrade = [];
+
     for (const [index, currentAssessment] of currentAssessments.entries()) {
-      if (currentAssessment['media_webquest'] > 0) {
-        availableWebquests.push(currentAssessment['media_webquest']);
-      } else if (currentAssessment['webquest01'] > 0) {
-        availableWebquests.push(currentAssessment['webquest01']);
-      } else {
-        availableWebquests.push(0);
-      }
-
-      if (currentAssessment['media_forum'] > 0) {
-        availableForums.push(currentAssessment['media_forum']);
-      } else if (currentAssessment['forum04'] > 0) {
-        const currentForumMean = ((currentAssessment['forum04'] + currentAssessment['forum03'] + currentAssessment['forum02'] + currentAssessment['forum01']) / 4).toFixed(2);
-        availableForums.push(currentForumMean);
-      } else if (currentAssessment['forum03'] > 0) {
-        const currentForumMean = ((currentAssessment['forum03'] + currentAssessment['forum02'] + currentAssessment['forum01']) / 3).toFixed(2);
-        availableForums.push(currentForumMean);
-      } else if (currentAssessment['forum02'] > 0) {
-        const currentForumMean = ((currentAssessment['forum02'] + currentAssessment['forum01']) / 2).toFixed(2);
-        availableForums.push(currentForumMean);
-      } else if (currentAssessment['forum01'] > 0) {
-        const currentForumMean = currentAssessment['forum01'].toFixed(2);
-        availableForums.push(currentForumMean);
-      } else {
-        availableForums.push(0);
-      }
-
-      if (currentAssessment['media_provas'] > 0) {
-        availableGrades.push(currentAssessment['media_provas']);
-      } else if (currentAssessment['primeira_prova'] > 0) {
-        availableGrades.push(currentAssessment['primeira_prova']);
-      } else {
-        availableGrades.push(0);
-      }
-
       const studentPredictionResult = prediction.data.predictedData[index];
       
       if (studentPredictionResult === 0) {
@@ -730,29 +701,273 @@ class Dashboard extends Component {
       } else if (studentPredictionResult === 1) {
         studentPredictionResults.push('green');
       }
+      
+      if (currentAssessment['media_webquest'] > 0) {
+        availableWebquests.push(currentAssessment['media_webquest']);
+
+        if (studentPredictionResult === 0) {
+          unsatisfactoryWebquest.push(currentAssessment['media_webquest']);
+        } else if (studentPredictionResult === 1) {
+          satisfactoryWebquest.push(currentAssessment['media_webquest']);
+        }
+      } else if (currentAssessment['webquest01'] > 0) {
+        availableWebquests.push(currentAssessment['webquest01']);
+
+        if (studentPredictionResult === 0) {
+          unsatisfactoryWebquest.push(currentAssessment['webquest01']);
+        } else if (studentPredictionResult === 1) {
+          satisfactoryWebquest.push(currentAssessment['webquest01']);
+        }
+      } else {
+        availableWebquests.push(0);
+
+        if (studentPredictionResult === 0) {
+          unsatisfactoryWebquest.push(0);
+        } else if (studentPredictionResult === 1) {
+          satisfactoryWebquest.push(0);
+        }
+      }
+
+      if (currentAssessment['media_forum'] > 0) {
+        availableForums.push(currentAssessment['media_forum']);
+
+        if (studentPredictionResult === 0) {
+          unsatisfactoryForum.push(currentAssessment['media_forum']);
+        } else if (studentPredictionResult === 1) {
+          satisfactoryForum.push(currentAssessment['media_forum']);
+        }
+      } else if (currentAssessment['forum04'] > 0) {
+        const currentForumMean = ((currentAssessment['forum04'] + currentAssessment['forum03'] + currentAssessment['forum02'] + currentAssessment['forum01']) / 4).toFixed(2);
+        availableForums.push(currentForumMean);
+
+        if (studentPredictionResult === 0) {
+          unsatisfactoryForum.push(currentForumMean);
+        } else if (studentPredictionResult === 1) {
+          satisfactoryForum.push(currentForumMean);
+        }
+      } else if (currentAssessment['forum03'] > 0) {
+        const currentForumMean = ((currentAssessment['forum03'] + currentAssessment['forum02'] + currentAssessment['forum01']) / 3).toFixed(2);
+        availableForums.push(currentForumMean);
+
+        if (studentPredictionResult === 0) {
+          unsatisfactoryForum.push(currentForumMean);
+        } else if (studentPredictionResult === 1) {
+          satisfactoryForum.push(currentForumMean);
+        }
+      } else if (currentAssessment['forum02'] > 0) {
+        const currentForumMean = ((currentAssessment['forum02'] + currentAssessment['forum01']) / 2).toFixed(2);
+        availableForums.push(currentForumMean);
+        
+        if (studentPredictionResult === 0) {
+          unsatisfactoryForum.push(currentForumMean);
+        } else if (studentPredictionResult === 1) {
+          satisfactoryForum.push(currentForumMean);
+        }
+      } else if (currentAssessment['forum01'] > 0) {
+        const currentForumMean = currentAssessment['forum01'].toFixed(2);
+        availableForums.push(currentForumMean);
+
+        if (studentPredictionResult === 0) {
+          unsatisfactoryForum.push(currentForumMean);
+        } else if (studentPredictionResult === 1) {
+          satisfactoryForum.push(currentForumMean);
+        }
+      } else {
+        availableForums.push(0);
+
+        if (studentPredictionResult === 0) {
+          unsatisfactoryForum.push(0);
+        } else if (studentPredictionResult === 1) {
+          satisfactoryForum.push(0);
+        }
+      }
+
+      if (currentAssessment['media_provas'] > 0) {
+        availableGrades.push(currentAssessment['media_provas']);
+
+        if (studentPredictionResult === 0) {
+          unsatisfactoryGrade.push(currentAssessment['media_provas']);
+        } else if (studentPredictionResult === 1) {
+          satisfactoryGrade.push(currentAssessment['media_provas']);
+        }
+      } else if (currentAssessment['primeira_prova'] > 0) {
+        availableGrades.push(currentAssessment['primeira_prova']);
+
+        if (studentPredictionResult === 0) {
+          unsatisfactoryGrade.push(currentAssessment['primeira_prova']);
+        } else if (studentPredictionResult === 1) {
+          satisfactoryGrade.push(currentAssessment['primeira_prova']);
+        }
+      } else {
+        availableGrades.push(0);
+
+        if (studentPredictionResult === 0) {
+          unsatisfactoryGrade.push(0);
+        } else if (studentPredictionResult === 1) {
+          satisfactoryGrade.push(0);
+        }
+      }
     }
 
-    availableGradeSizes = availableGrades.map(availableGrade => availableGrade * 10);
+    const mappedMoreThenZeroWebquest = availableWebquests.filter(availableWebquest => availableWebquest > 0);
+    const mappedMoreThenZeroForum = availableForums.filter(availableForum => availableForum > 0);
+    const mappedMoreThenZeroGrades = availableGrades.filter(availableGrade => availableGrade > 0);
 
-    availableGradeTexts = availableGrades.map((availableGrade, index) => {
-      const currentStudentName = currentAssessments[index]['nome_do_aluno'];
-      return `${currentStudentName}<br>Nota da prova: ${availableGrade}`;
-    });
+    if (mappedMoreThenZeroWebquest.length && mappedMoreThenZeroForum.length && mappedMoreThenZeroGrades.length) {
+      availableGradeSizes = availableGrades.map(availableGrade => availableGrade * 10);
 
-    const trace = {
-      x: availableForums,
-      y: availableWebquests,
-      text: availableGradeTexts,
+      availableGradeTexts = availableGrades.map((availableGrade, index) => {
+        const currentStudentName = currentAssessments[index]['nome_do_aluno'];
+        return `${currentStudentName}<br>Nota da prova: ${availableGrade}`;
+      });
+
+      const trace = {
+        x: availableForums,
+        y: availableWebquests,
+        text: availableGradeTexts,
+        mode: 'markers',
+        marker: {
+          color: studentPredictionResults,
+          size: availableGradeSizes
+        },
+      };
+      
+      const data = [trace];
+
+      const { config } = this.state;
+
+      return (
+        <Content style={{ backgroundColor: 'white', borderRadius: '5px' }}>
+          <Plot
+            data={
+              data
+            }
+            layout={
+              this.getGradeAndForumAndWebquestChartDataLayout()
+            }
+            config={
+              config
+            }
+            graphDiv='graph'
+          />
+        </Content>
+      )
+    } else if ((mappedMoreThenZeroWebquest.length && mappedMoreThenZeroForum.length) || (mappedMoreThenZeroWebquest.length && mappedMoreThenZeroGrades.length) || (mappedMoreThenZeroForum.length && mappedMoreThenZeroGrades.length)) {
+      let data;
+      let layout;
+      let titleX;
+      let titleY;
+
+      if (mappedMoreThenZeroWebquest.length && mappedMoreThenZeroForum.length) {
+        titleX = 'Nota do forum';
+        titleY = 'Nota do Webquest';
+        
+        const minXaxis = Math.min(...availableForums);
+        const maxXaxis =  Math.max(...availableForums);
+        const minYaxis =  Math.min(...availableWebquests);
+        const maxYaxis =  Math.max(...availableWebquests);
+
+        data = this.makeScatterChart(satisfactoryWebquest, unsatisfactoryWebquest, satisfactoryForum, unsatisfactoryForum);
+        layout = this.makeScatterLayout(titleX, minXaxis, maxXaxis, titleY, minYaxis, maxYaxis);
+      } else if (mappedMoreThenZeroWebquest.length && mappedMoreThenZeroGrades.length) {
+        titleX = 'Nota da prova';
+        titleY = 'Nota do Webquest';
+
+        const minXaxis = Math.min(...availableGrades);
+        const maxXaxis =  Math.max(...availableGrades);
+        const minYaxis =  Math.min(...availableWebquests);
+        const maxYaxis =  Math.max(...availableWebquests);
+
+        data = this.makeScatterChart(satisfactoryWebquest, unsatisfactoryWebquest, satisfactoryGrade, unsatisfactoryGrade);
+        layout = this.makeScatterLayout(titleX, minXaxis, maxXaxis, titleY, minYaxis, maxYaxis);
+      } else if (mappedMoreThenZeroForum.length && mappedMoreThenZeroGrades.length) {
+        titleX = 'Nota do forum';
+        titleY = 'Nota da prova';
+
+        const minXaxis = Math.min(...availableForums);
+        const maxXaxis =  Math.max(...availableForums);
+        const minYaxis =  Math.min(...availableGrades);
+        const maxYaxis =  Math.max(...availableGrades);
+
+        data = this.makeScatterChart(satisfactoryGrade, unsatisfactoryGrade, satisfactoryForum, unsatisfactoryForum);
+        layout = this.makeScatterLayout(titleX, minXaxis, maxXaxis, titleY, minYaxis, maxYaxis);
+      }
+      
+      const { config } = this.state;
+
+      return (
+        <Content style={{ backgroundColor: 'white', borderRadius: '5px' }}>
+          <Plot
+            data={
+              data
+            }
+            layout={
+              layout
+            }
+            config={
+              config
+            }
+            graphDiv='graph'
+          />
+        </Content>
+      )
+    } else {
+      return;
+    }
+  }
+
+  makeScatterChart = (satisfactoryY, unsatisfactoryY, satisfactoryX, unsatisfactoryX) => {
+    const satisfactoryTrace = {
+      x: satisfactoryX,
+      y: satisfactoryY,
       mode: 'markers',
-      marker: {
-        color: studentPredictionResults,
-        size: availableGradeSizes
+      type: 'scatter',
+      name: 'Satisfatório',
+      // text: ['A-1', 'A-2', 'A-3', 'A-4', 'A-5'],
+      marker: { 
+        size: 12,
+        color: 'green',
       },
     };
     
-    const data = [trace];
+    const unsatisfactoryTrace = {
+      x: unsatisfactoryX,
+      y: unsatisfactoryY,
+      mode: 'markers',
+      type: 'scatter',
+      name: 'Insatisfatório',
+      // text: ['B-a', 'B-b', 'B-c', 'B-d', 'B-e'],
+      marker: { 
+        size: 12,
+        color: 'red',
+      },
+    };
+    
+    const data = [satisfactoryTrace, unsatisfactoryTrace];
 
     return data;
+  }
+
+  makeScatterLayout = (titleX, minXaxis, maxXaxis, titleY, minYaxis, maxYaxis) => {
+    const layout = {
+      width: 900, 
+      height: 600,
+      xaxis: {
+        title: titleX,
+        range: [minXaxis-0.2, maxXaxis+0.2],
+      },
+      yaxis: {
+        title: titleY,
+        range: [minYaxis-0.2, maxYaxis+0.2],
+      },
+      title: 'Situação atual dos alunos',
+      font: {
+        family: 'Avenir, sans-serif',
+        size: 14,
+      },
+    };
+
+    return layout;
   }
 
   getGradeAndForumAndWebquestChartDataLayout = () => {
@@ -764,7 +979,7 @@ class Dashboard extends Component {
       height: 600,
       font: {
         family: 'Avenir, sans-serif',
-        size: 15,
+        size: 14,
       },
       xaxis: {
         title: 'Nota do fórum',
@@ -849,7 +1064,7 @@ class Dashboard extends Component {
       },
       font: {
         family: 'Avenir, sans-serif',
-        size: 15,
+        size: 14,
       },
       barmode: 'stack',
     };
@@ -886,7 +1101,7 @@ class Dashboard extends Component {
       },
       font: {
         family: 'Avenir, sans-serif',
-        size: 15,  
+        size: 14,  
       },
     };
 
@@ -1170,20 +1385,7 @@ class Dashboard extends Component {
               </FullContainer>
 
               <FullContainer style={{ justifyContent: 'center' }}>
-                <Content style={{ backgroundColor: 'white', borderRadius: '5px' }}>
-                  <Plot
-                    data={
-                      this.getChartDataDynamically('gradeAndForumAndWebquest')
-                    }
-                    layout={
-                      this.getChartLayoutDynamically('gradeAndForumAndWebquest')
-                    }
-                    config={
-                      config
-                    }
-                    graphDiv='graph'
-                  />
-                </Content>
+                {this.getChartDataDynamically('gradeAndForumAndWebquest')}
               </FullContainer>
             </div> : null}
 
