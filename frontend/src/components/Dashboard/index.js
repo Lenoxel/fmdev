@@ -53,6 +53,7 @@ class Dashboard extends Component {
     config: {
       responsive: true,
       displaylogo: false,
+      // scrollZoom: true,
     },
     chartOptions: [
       { value: 'bar', label: 'Barra' },
@@ -452,7 +453,7 @@ class Dashboard extends Component {
     const detailedChartData = [chartInfo];
 
     const detailedChartLayout = {
-      title: 'Análise de desempenho dos alunos',
+      title: 'Análise preditiva de desempenho dos alunos',
       width: 670, 
       height: 480,
       // font:{
@@ -555,7 +556,7 @@ class Dashboard extends Component {
     const detailedChartData = traces;
 
     const detailedChartLayout = {
-      title: 'Análise de desempenho dos alunos',
+      title: 'Análise preditiva de desempenho dos alunos',
       width: 670, 
       height: 480,
     };
@@ -836,8 +837,18 @@ class Dashboard extends Component {
 
       const { config } = this.state;
 
+      // config.modeBarButtonsToAdd = [
+      //   {
+      //     name: 'Tip button',
+      //     icon: icon1,
+      //     click: function(gd) {
+      //       alert('Here comes the tip!');
+      //     }
+      //   },
+      // ];
+
       return (
-        <Content style={{ backgroundColor: 'white', borderRadius: '5px' }}>
+        <Content style={{ backgroundColor: 'white', borderRadius: '5px', width: '100%' }}>
           <Plot
             data={
               data
@@ -859,7 +870,7 @@ class Dashboard extends Component {
       let titleY;
 
       if (mappedMoreThenZeroWebquest.length && mappedMoreThenZeroForum.length) {
-        titleX = 'Nota do forum';
+        titleX = 'Nota do Fórum';
         titleY = 'Nota do Webquest';
         
         const minXaxis = Math.min(...availableForums);
@@ -870,7 +881,7 @@ class Dashboard extends Component {
         data = this.makeScatterChart(satisfactoryWebquest, unsatisfactoryWebquest, satisfactoryForum, unsatisfactoryForum);
         layout = this.makeScatterLayout(titleX, minXaxis, maxXaxis, titleY, minYaxis, maxYaxis);
       } else if (mappedMoreThenZeroWebquest.length && mappedMoreThenZeroGrades.length) {
-        titleX = 'Nota da prova';
+        titleX = 'Nota da Prova';
         titleY = 'Nota do Webquest';
 
         const minXaxis = Math.min(...availableGrades);
@@ -881,8 +892,8 @@ class Dashboard extends Component {
         data = this.makeScatterChart(satisfactoryWebquest, unsatisfactoryWebquest, satisfactoryGrade, unsatisfactoryGrade);
         layout = this.makeScatterLayout(titleX, minXaxis, maxXaxis, titleY, minYaxis, maxYaxis);
       } else if (mappedMoreThenZeroForum.length && mappedMoreThenZeroGrades.length) {
-        titleX = 'Nota do forum';
-        titleY = 'Nota da prova';
+        titleX = 'Nota do Fórum';
+        titleY = 'Nota da Prova';
 
         const minXaxis = Math.min(...availableForums);
         const maxXaxis =  Math.max(...availableForums);
@@ -896,7 +907,51 @@ class Dashboard extends Component {
       const { config } = this.state;
 
       return (
-        <Content style={{ backgroundColor: 'white', borderRadius: '5px' }}>
+        <Content style={{ backgroundColor: 'white', borderRadius: '5px', width: '100%', textAlign: 'center' }}>
+          <Plot
+            data={
+              data
+            }
+            layout={
+              layout
+            }
+            config={
+              config
+            }
+            graphDiv='graph'
+          />
+        </Content>
+      )
+    } else if (mappedMoreThenZeroWebquest.length || mappedMoreThenZeroForum.length || mappedMoreThenZeroGrades.length) {
+      let data;
+      let layout;
+      let titleX;
+      let titleY;
+
+      if (mappedMoreThenZeroWebquest.length) {
+        titleX = 'Nota do Webquest';
+        titleY = 'Quantidade';
+
+        data = this.makeHistogramChart(satisfactoryWebquest, unsatisfactoryWebquest);
+        layout = this.makeHistogramLayout(titleX, titleY);
+      } else if (mappedMoreThenZeroGrades.length) {
+        titleX = 'Nota da Prova';
+        titleY = 'Quantidade';
+
+        data = this.makeHistogramChart(satisfactoryGrade, unsatisfactoryGrade);
+        layout = this.makeHistogramLayout(titleX, titleY);
+      } else if (mappedMoreThenZeroForum.length) {
+        titleX = 'Nota da Prova';
+        titleY = 'Quantidade';
+
+        data = this.makeHistogramChart(satisfactoryForum, unsatisfactoryForum);
+        layout = this.makeHistogramLayout(titleX, titleY);
+      }
+      
+      const { config } = this.state;
+
+      return (
+        <Content style={{ backgroundColor: 'white', borderRadius: '5px', width: '100%', textAlign: 'center' }}>
           <Plot
             data={
               data
@@ -914,6 +969,51 @@ class Dashboard extends Component {
     } else {
       return;
     }
+  }
+
+  makeHistogramChart = (satisfactoryIndicator, unsatisfactoryIndicator) => {
+    const firstTrace = {
+      x: satisfactoryIndicator,
+      type: 'histogram',
+      opacity: 0.5,
+      marker: {
+        color: 'green',
+      },
+    };
+
+    const secondTrace = {
+      x: unsatisfactoryIndicator,
+      type: 'histogram',
+      opacity: 0.6,
+      marker: {
+        color: 'red',
+      },
+    };
+
+    const data = [firstTrace, secondTrace];
+
+    return data;
+  }
+
+  makeHistogramLayout = (titleX, titleY) => {
+    const layout = {
+      width: 1000, 
+      height: 600,
+      barmode: "overlay",
+      xaxis: {
+        title: titleX,
+      },
+      yaxis: {
+        title: titleY,
+      },
+      title: 'Situação atual dos alunos',
+      font: {
+        family: 'Avenir, sans-serif',
+        size: 14,
+      },
+    };
+
+    return layout;
   }
 
   makeScatterChart = (satisfactoryY, unsatisfactoryY, satisfactoryX, unsatisfactoryX) => {
@@ -950,7 +1050,7 @@ class Dashboard extends Component {
 
   makeScatterLayout = (titleX, minXaxis, maxXaxis, titleY, minYaxis, maxYaxis) => {
     const layout = {
-      width: 900, 
+      width: 1000, 
       height: 600,
       xaxis: {
         title: titleX,
@@ -982,10 +1082,10 @@ class Dashboard extends Component {
         size: 14,
       },
       xaxis: {
-        title: 'Nota do fórum',
+        title: 'Nota do Fórum',
       },
       yaxis: {
-        title: 'Nota do webquest',
+        title: 'Nota do Webquest',
       },
     };
 
@@ -1092,7 +1192,7 @@ class Dashboard extends Component {
 
   getSatisfactoryAndUnsatisfactoryChartLayoutDynamic = () => {
     const barChartLayoutDynamic = {
-      title: 'Análise de desempenho dos alunos',
+      title: 'Análise preditiva de desempenho dos alunos',
       autosize: false,
       width: 530, 
       height: 400,
@@ -1134,7 +1234,7 @@ class Dashboard extends Component {
 
   getPieChartLayoutDynamic = () => {
     const pieChartLayoutDynamic = {
-      title: 'Análise de desempenho dos alunos',
+      title: 'Análise preditiva de desempenho dos alunos',
       width: 800, 
       height: 500,
       font:{
@@ -1183,7 +1283,7 @@ class Dashboard extends Component {
     } = this.state;
 
     return (
-      <PerfectScrollbar style={{ width: '100%', overflowX: 'auto', background: 'lightskyblue'}}>
+      <PerfectScrollbar style={{ width: '100%', background: 'powderblue'}}>
         <MainContainer>
           <AsideContainer>
             <LeftContent>
@@ -1288,7 +1388,7 @@ class Dashboard extends Component {
                     <Tooltip title="Veja o resumo das principais informações da análise gerada" arrow>
                       <Chip
                         label='Visão Geral'
-                        style={{ fontFamily: 'Avenir, sans-serif' }}
+                        style={{ fontFamily: 'Avenir, sans-serif', fontSize: '15px' }}
                         className={chipSelected === 'overallView' ? 'active-chip' : 'inactive-chip'}
                         onClick={this.setChip.bind(this, 'overallView')}
                       />
@@ -1298,7 +1398,7 @@ class Dashboard extends Component {
                     <Tooltip title="Veja os detalhes da situação de cada aluno" arrow>
                       <Chip
                         label='Alunos'
-                        style={{ fontFamily: 'Avenir, sans-serif' }}
+                        style={{ fontFamily: 'Avenir, sans-serif', fontSize: '15px' }}
                         className={chipSelected === 'studentsView' ? 'active-chip' : 'inactive-chip'}
                         onClick={this.setChip.bind(this, 'studentsView')}
                       />
@@ -1308,7 +1408,7 @@ class Dashboard extends Component {
                     <Tooltip title="Veja as informações dos atributos dos alunos no AVA" arrow>
                       <Chip
                         label='Indicadores'
-                        style={{ fontFamily: 'Avenir, sans-serif' }}
+                        style={{ fontFamily: 'Avenir, sans-serif', fontSize: '15px' }}
                         className={chipSelected === 'indicatorsView' ? 'active-chip' : 'inactive-chip'}
                         onClick={this.setChip.bind(this, 'indicatorsView')}
                       />
@@ -1384,7 +1484,7 @@ class Dashboard extends Component {
                 </HalfContent>
               </FullContainer>
 
-              <FullContainer style={{ justifyContent: 'center' }}>
+              <FullContainer style={{ textAlign: 'center' }}>
                 {this.getChartDataDynamically('gradeAndForumAndWebquest')}
               </FullContainer>
             </div> : null}
