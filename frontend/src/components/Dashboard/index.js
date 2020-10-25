@@ -1,7 +1,6 @@
 import React, { Component } from 'react';
 
 import PerfectScrollbar from 'react-perfect-scrollbar';
-import { ConfigContainer } from '../../styles/ConfigContainer';
 import {
   Header, LoadingContainer, SelectText, selectStyle
 } from '../../styles/global';
@@ -17,7 +16,7 @@ import { Creators as PredictionActions } from '../../store/ducks/prediction';
 import { Creators as StudentActions } from '../../store/ducks/student';
 import { Creators as PeriodActions } from '../../store/ducks/period';
 
-import { LeftContent, SelectContainer, Content, HalfContent, CustomizedContent, GraphContainer, GraphContainerInside, FlexItem, TabsContainer, ExternalLoadingContainer, LeftContentInside, FlexInside, AsideContainer, MainContainer, DashboardMainContainer, FullContainer } from './styles';
+import { LeftContent, SelectContainer, Content, HalfContent, CustomizedContent, GraphContainer, GraphContainerInside, FlexItem, TabsContainer, ExternalLoadingContainer, LeftContentInside, FlexInside, AsideContainer, MainContainer, DashboardMainContainer, FullContainer, ChipContainer, Item, CardContainer } from './styles';
 import Select from 'react-select';
 import Button from '../../styles/Button';
 
@@ -28,6 +27,7 @@ import { Alert, AlertTitle } from '@material-ui/lab';
 import Chip from '@material-ui/core/Chip';
 import Tooltip from '@material-ui/core/Tooltip';
 import MonitorIcon from 'react-feather/dist/icons/monitor';
+import InfoIcon from 'react-feather/dist/icons/info';
 
 import Table from '@material-ui/core/Table';
 import TableBody from '@material-ui/core/TableBody';
@@ -37,6 +37,13 @@ import TableHead from '@material-ui/core/TableHead';
 import TableRow from '@material-ui/core/TableRow';
 import Paper from '@material-ui/core/Paper';
 
+import Card from '@material-ui/core/Card';
+import CardActionArea from '@material-ui/core/CardActionArea';
+import CardContent from '@material-ui/core/CardContent';
+import Typography from '@material-ui/core/Typography';
+import CardHeader from '@material-ui/core/CardHeader';
+import Avatar from '@material-ui/core/Avatar';
+
 // simplest method: uses precompiled complete bundle from `plotly.js`
 // import Plot from 'react-plotly.js';
 
@@ -45,7 +52,25 @@ import Plotly from "plotly.js-basic-dist";
 
 // customizable method: use your own `Plotly` object
 import createPlotlyComponent from 'react-plotly.js/factory';
+
 const Plot = createPlotlyComponent(Plotly);
+
+// const useStyles = makeStyles((theme) => ({
+//   button: {
+//     margin: theme.spacing(1),
+//   },
+//   customWidth: {
+//     maxWidth: 500,
+//   },
+//   noMaxWidth: {
+//     maxWidth: 'none',
+//   },
+//   fixedFontSize: {
+//     fontSize: '15px',
+//   }
+// }));
+
+// const classes = useStyles();
 
 class Dashboard extends Component {
   state = {
@@ -279,6 +304,7 @@ class Dashboard extends Component {
 
     this.setState({ 
       tabValue: 0,
+      chipSelected: 'overallView',
       variableOptions: null,
       choosedVariable: null,
       studentOptions: null,
@@ -286,8 +312,6 @@ class Dashboard extends Component {
       predictionInfoText: null,
     });
   }
-
-  setChip = (value, event) => this.setState({ chipSelected: value });
 
   getValueFromSelect = item => {
     if (!item || !item.value) {
@@ -305,7 +329,81 @@ class Dashboard extends Component {
     return items.map(item => item.value);
   }
 
-  handleTabChange = (event, newValue) => {
+
+  setChip = (value) => {
+    if (value === 'overallView') {
+      this.setState({
+        chipSelected: value
+      });
+    } else if (value === 'studentsView') {
+      const studentOptions = this.getStudentsDynamically();
+      const variableOptions = this.getVariablesDynamically();
+
+      const choosedStudent = studentOptions[0];
+      const choosedVariable = [variableOptions[0]];
+
+      this.setState({ 
+        chipSelected: value,
+        studentOptions,
+        variableOptions,
+        choosedStudent,
+        choosedVariable,
+      });
+
+      this.handleVariableChange(choosedVariable);
+      this.handleStudentChange(choosedStudent, choosedVariable);
+    }
+  }
+
+  getStudentsDynamically = () => {
+    const { prediction } = this.props;
+
+    let studentOptions = [];
+
+    if (prediction && prediction.data && prediction.data.realData) {
+      prediction.data.realData.forEach(uniqueData => {
+        const studentOption = {
+          label: uniqueData.nome_do_aluno,
+          value: uniqueData.id_do_aluno,
+        }
+  
+        studentOptions.push(studentOption);
+      });
+    }
+
+    return studentOptions;
+  }
+
+  getVariablesDynamically = () => {
+    const { prediction } = this.props;
+    const { mappedVariablesMeaning } = this.state;
+
+    let variableOptions = [
+      {
+      label: 'Todas',
+      value: 'Todas'
+      }
+    ];
+
+    if (prediction && prediction.data && prediction.data.realData) {
+      const variables = Object.keys(prediction.data.realData[0]);
+
+      variables.forEach(variable => {
+        if (variable !== 'nome_do_aluno' && variable !== 'id_do_aluno') {
+          const variableOption = {
+            label: mappedVariablesMeaning[variable] || variable,
+            value: variable,
+          }
+    
+          variableOptions.push(variableOption);
+        }
+      });
+    }
+
+    return variableOptions;
+  }
+
+  handleTabChange = (newValue) => {
     if (newValue === 1) {
       const studentOptions = this.getStudentsDynamically();
       const variableOptions = this.getVariablesDynamically();
@@ -320,7 +418,7 @@ class Dashboard extends Component {
     }
   };
 
-  handleDetailedChange = (event, value) => {
+  handleDetailedChange = (event) => {
     if (event) {
       this.setState({ 
         choosedDetailed: event,
@@ -331,19 +429,19 @@ class Dashboard extends Component {
     }
   }
 
-  handleStudentChange = (event, value) => {
-    if (event) {
+  handleStudentChange = (event, choosedVariableFromInit) => {
+    if (event && (event.value || event.length)) {
       const { 
         choosedVariable, choosedDetailed
       } = this.state;
       
-      if (choosedVariable) {
+      if (choosedVariable || choosedVariableFromInit) {
         this.setState({
           loadingChart: true,
         });
 
         if (choosedDetailed.value === 'byStudent') {
-          this.makeDetailedChartByStudent(event, 'changingStudent');
+          this.makeDetailedChartByStudent(event, 'changingStudent', choosedVariableFromInit);
         } else if (choosedDetailed.value === 'byVariable') {
           this.makeDetailedChartByVariable(event, 'changingStudent');
         }
@@ -361,8 +459,8 @@ class Dashboard extends Component {
     }
   }
 
-  handleVariableChange = (event, value) => {
-    if (event) {
+  handleVariableChange = (event) => {
+    if (event && (event.value || event.length)) {
       const { 
         choosedStudent, choosedDetailed
       } = this.state;
@@ -391,7 +489,7 @@ class Dashboard extends Component {
     }
   }
 
-  makeDetailedChartByStudent = (choosedDontKnow, changingWhat) => {
+  makeDetailedChartByStudent = (choosedDontKnow, changingWhat, choosedVariableFromInit) => {
     const { 
       choosedStudent, choosedVariable, mappedVariablesMeaning
     } = this.state;
@@ -404,7 +502,7 @@ class Dashboard extends Component {
     // Essa verificação é importantíssima, pois o estudante pode estar sendo modificado nesse exato momento, logo ele ainda não foi modificado no state.
     if (changingWhat === 'changingStudent') {
       updatedChoosedStudent = choosedDontKnow;
-      updatedChoosedVariables = choosedVariable;
+      updatedChoosedVariables = choosedVariable ? choosedVariable : choosedVariableFromInit;
     } else {
       updatedChoosedStudent = choosedStudent;
       updatedChoosedVariables = choosedDontKnow;
@@ -428,6 +526,20 @@ class Dashboard extends Component {
     let xValueVariableNames = [];
     let yValueVariableValues = [];
     let textList = [];
+
+    if (updatedChoosedVariables[updatedChoosedVariables.length-1].value === 'Todas') {
+      let variableOptions = this.getVariablesDynamically();
+      variableOptions.shift();
+      updatedChoosedVariables = variableOptions;
+      if (changingWhat === 'changingVariable') {
+        choosedDontKnow = variableOptions;
+      }
+    } else if (updatedChoosedVariables[0].value === 'Todas' && updatedChoosedVariables.length > 1) {
+      updatedChoosedVariables.shift();
+      if (changingWhat === 'changingVariable') {
+        choosedDontKnow = updatedChoosedVariables;
+      }
+    }
 
     for (const [index, variableName] of variableNames.entries()) {
       const searchedVariableOption = updatedChoosedVariables.find(variableOption => variableOption.value === variableName);
@@ -453,19 +565,22 @@ class Dashboard extends Component {
     const detailedChartData = [chartInfo];
 
     const detailedChartLayout = {
-      title: 'Análise preditiva de desempenho dos alunos',
-      width: 670, 
-      height: 480,
+      title: 'Indicadores do aluno x Média dos aprovados x Médias dos reprovados',
+      width: 750, 
+      height: 500,
       // font:{
       //   family: 'Raleway, sans-serif'  
       // },
       showlegend: false,
       xaxis: {
-        tickangle: -45
+        title: 'Indicadores',
       },
       yaxis: {
-        zeroline: false,
-        gridwidth: 2
+        title: 'Valor do Indicador',
+      },
+      font: {
+        family: 'Avenir, sans-serif',
+        size: 14,
       },
       bargap: 0.05
     };
@@ -557,8 +672,8 @@ class Dashboard extends Component {
 
     const detailedChartLayout = {
       title: 'Análise preditiva de desempenho dos alunos',
-      width: 670, 
-      height: 480,
+      width: 1000, 
+      height: 500,
     };
 
     const predictionInfoText = updatedChoosedVariable.value + ' - ' + updatedChoosedVariable.label;
@@ -590,54 +705,6 @@ class Dashboard extends Component {
 
   //   return bgColor;
   // }
-
-  getStudentsDynamically = () => {
-    const { prediction } = this.props;
-
-    let studentOptions = [];
-
-    if (prediction && prediction.data && prediction.data.realData) {
-      prediction.data.realData.forEach(uniqueData => {
-        const studentOption = {
-          label: uniqueData.nome_do_aluno,
-          value: uniqueData.id_do_aluno,
-        }
-  
-        studentOptions.push(studentOption);
-      });
-    }
-
-    return studentOptions;
-  }
-
-  getVariablesDynamically = () => {
-    const { prediction } = this.props;
-    const { mappedVariablesMeaning } = this.state;
-
-    let variableOptions = [
-      // {
-      // label: 'Todas',
-      // value: 'Todas'
-      // }
-    ];
-
-    if (prediction && prediction.data && prediction.data.realData) {
-      const variables = Object.keys(prediction.data.realData[0]);
-
-      variables.forEach(variable => {
-        if (variable !== 'nome_do_aluno' && variable !== 'id_do_aluno') {
-          const variableOption = {
-            label: mappedVariablesMeaning[variable] || variable,
-            value: variable,
-          }
-    
-          variableOptions.push(variableOption);
-        }
-      });
-    }
-
-    return variableOptions;
-  }
 
   // handleChartChange = (event, value) => {
   //   if (event) {
@@ -1275,6 +1342,86 @@ class Dashboard extends Component {
     )
   }
 
+  renderStudentCards= (choosedStudent, predictionInfoText) => {
+    const { prediction } = this.props;
+
+    let countZeros = prediction.data.countDisapproved;
+    let countOnes = prediction.data.countApproved;
+    
+    return (
+      <CardContainer style={{ display: 'flex', flexDirection: 'column', width: '30%', margin: '0 10px' }}>
+        <Card variant="outlined" style={{ minWidth: '320px', marginBottom: '10px' }}>
+          <Typography gutterBottom variant="h5" component="div" style={{ color: 'white', fontFamily: 'Avenir, sans-serif', backgroundColor: 'rgb(81, 201, 245)', minHeight: '50px', justifyContent: 'center', display: 'flex' }}>
+            <span style={{ alignSelf: 'center' }}>Análise Preditiva</span>
+          </Typography>
+          <CardContent>
+            <Typography gutterBottom variant="h5" component="h2" style={{ color: 'green', fontFamily: 'Avenir, sans-serif' }}>
+              Desempenho satisfatório
+            </Typography>
+            <Typography variant="body2" color="textSecondary" component="p" style={{ color: 'green', fontFamily: 'Avenir, sans-serif', fontSize: '15px' }}>
+              {predictionInfoText === 'Aprovado' ?
+                <span><strong>{choosedStudent}</strong> + {countOnes-1} alunos</span>
+              : <span>{countOnes} alunos</span>
+              }
+            </Typography>
+            <hr style={{ margin: '10px 0 5px' }}></hr>
+            <Typography gutterBottom variant="h5" component="h2" style={{ color: 'red', fontFamily: 'Avenir, sans-serif' }}>
+              Desempenho insatisfatório
+            </Typography>
+            <Typography variant="body2" color="textSecondary" component="p" style={{ color: 'red', fontFamily: 'Avenir, sans-serif', fontSize: '15px' }}>
+              {predictionInfoText === 'Reprovado' ?
+                <span><strong>{choosedStudent}</strong> + {countZeros-1} alunos</span>
+              : <span>{countZeros} alunos</span>
+              }
+            </Typography>
+          </CardContent>
+        </Card>
+        <Card variant="outlined" style={{ minWidth: '320px', marginBottom: '10px' }}>
+          <Typography gutterBottom variant="h5" component="div" style={{ color: 'white', fontFamily: 'Avenir, sans-serif', backgroundColor: 'rgb(81, 201, 245)', minHeight: '50px', justifyContent: 'center', display: 'flex' }}>
+            <span style={{ alignSelf: 'center' }}>Análise Descritiva</span>
+          </Typography>
+          <CardContent>
+            <div style={{ border: '5px aliceblue', borderStyle: 'outset', borderRadius: '10px', padding: '5px' }}>
+              <Typography gutterBottom variant="h5" component="h2" style={{ color: 'black', fontFamily: 'Avenir, sans-serif' }}>
+                Notas do aluno
+              </Typography>
+              <Typography variant="body2" color="textSecondary" component="p" style={{ color: 'black', fontFamily: 'Avenir, sans-serif', fontSize: '15px' }}>
+                Média de 2 notas: 5.5
+              </Typography>
+              <Typography variant="body2" color="textSecondary" component="p" style={{ color: 'black', fontFamily: 'Avenir, sans-serif', fontSize: '15px' }}>
+                Média de 4 webquests: 2.0
+              </Typography>
+              <Typography variant="body2" color="textSecondary" component="p" style={{ color: 'black', fontFamily: 'Avenir, sans-serif', fontSize: '15px' }}>
+                Média de 2 fóruns: 2.5
+              </Typography>
+            </div>
+          </CardContent>
+        </Card>
+        <Card variant="outlined" style={{ minWidth: '320px' }}>
+          <Typography gutterBottom variant="h5" component="div" style={{ color: 'white', fontFamily: 'Avenir, sans-serif', backgroundColor: 'rgb(81, 201, 245)', minHeight: '50px', justifyContent: 'center', display: 'flex' }}>
+            <span style={{ alignSelf: 'center' }}>Análise Descritiva</span>
+          </Typography>
+          <CardContent>
+            <div style={{ border: '5px aliceblue', borderStyle: 'outset', borderRadius: '10px', padding: '5px' }}>
+              <Typography gutterBottom variant="h5" component="h2" style={{ color: 'black', fontFamily: 'Avenir, sans-serif' }}>
+                Média da turma
+              </Typography>
+              <Typography variant="body2" color="textSecondary" component="p" style={{ color: 'black', fontFamily: 'Avenir, sans-serif', fontSize: '15px' }}>
+                Média de 2 notas: 3.7
+              </Typography>
+              <Typography variant="body2" color="textSecondary" component="p" style={{ color: 'black', fontFamily: 'Avenir, sans-serif', fontSize: '15px' }}>
+                Média de 4 webquests: 1.0
+              </Typography>
+              <Typography variant="body2" color="textSecondary" component="p" style={{ color: 'black', fontFamily: 'Avenir, sans-serif', fontSize: '15px' }}>
+                Média de 2 fóruns: 1.5
+              </Typography>
+            </div>
+          </CardContent>
+        </Card>
+      </CardContainer>
+    )
+  } 
+
   render() {
     const { course, subject, semester, phenomenon, prediction, period, student } = this.props;
     const { courseSelected, subjectSelected, semesterSelected, phenomenonSelected, periodSelected, studentSelected,  } = this.props.indicator;
@@ -1283,7 +1430,7 @@ class Dashboard extends Component {
     } = this.state;
 
     return (
-      <PerfectScrollbar style={{ width: '100%', background: 'powderblue'}}>
+      <PerfectScrollbar style={{ width: '100%', background: '#eaeff1'}}>
         <MainContainer>
           <AsideContainer>
             <LeftContent>
@@ -1374,49 +1521,94 @@ class Dashboard extends Component {
 
           {prediction.data ?
           <DashboardMainContainer>
-            <FullContainer>
-              <Header style={{ padding: '10px 10px 0px' }}>
-                <MonitorIcon size={22} color={'#4A5173'} />
-                <h1 style={{ padding: '0px 0px 0px 12px' }}>Learning Analytics Dashboard</h1>
-              </Header>
-            </FullContainer>
+            <div style={{ background: 'linear-gradient(-45deg, #0c9ed4 0%, #51c9f5 100%)' }}>
+              <FullContainer>
+                <Header style={{ padding: '10px 10px 0px' }}>
+                  <MonitorIcon size={22} color={'white'} />
+                  <h1 style={{ padding: '0px 0px 0px 12px' }}>Learning Analytics Dashboard</h1>
+                  <div style={{ position: 'absolute', right: '0', marginTop: '6px' }}>
+                    <Item
+                      onClick={this.setChip.bind(this, 'overallView')}>
+                      <InfoIcon size={22} color={'white'} />
+                    </Item>
+                  </div>
+                </Header>
+              </FullContainer>
 
-            <FullContainer style={{ boxShadow: '0px 4px 4px rgba(0, 0, 0, 0.1)' }}>
-              <Header>
-                <div style={{ display: 'flex', paddingLeft: '3rem' }}>
-                  <div>
-                    <Tooltip title="Veja o resumo das principais informações da análise gerada" arrow>
-                      <Chip
-                        label='Visão Geral'
-                        style={{ fontFamily: 'Avenir, sans-serif', fontSize: '15px' }}
-                        className={chipSelected === 'overallView' ? 'active-chip' : 'inactive-chip'}
-                        onClick={this.setChip.bind(this, 'overallView')}
-                      />
-                    </Tooltip>
+              <FullContainer style={{ boxShadow: '0px 4px 4px rgba(0, 0, 0, 0.1)' }}>
+                <Header>
+                  <div style={{ display: 'flex', paddingLeft: '10px' }}>
+                    <div>
+                      <Tooltip 
+                        title="Veja o resumo das principais informações da análise gerada"
+                        arrow
+                        classes={{ tooltip: { fontSize: '15px' } }}>
+                        <ChipContainer>
+                          <Chip
+                            label='Visão Geral'
+                            className={chipSelected === 'overallView' ? 'active-chip-lad' : 'inactive-chip-lad'}
+                            onClick={this.setChip.bind(this, 'overallView')}
+                          />
+                        </ChipContainer>
+                      </Tooltip>
+                    </div>
+                    <div style={{ paddingLeft: '.5vw' }}>
+                      <Tooltip 
+                        title="Veja os detalhes da situação de cada aluno"
+                        arrow>
+                        <ChipContainer>
+                          <Chip
+                            label='Alunos'
+                            className={chipSelected === 'studentsView' ? 'active-chip-lad' : 'inactive-chip-lad'}
+                            variant="outlined"
+                            onClick={this.setChip.bind(this, 'studentsView')}
+                          />
+                        </ChipContainer>
+                      </Tooltip>
+                    </div>
+                    {/* <div style={{ paddingLeft: '.5vw' }}>
+                      <Tooltip title="Veja as informações dos indicadores dos alunos no AVA" arrow>
+                      <ChipContainer>
+                        <Chip
+                          label='Indicadores'
+                          className={chipSelected === 'indicatorsView' ? 'active-chip-lad' : 'inactive-chip-lad'}
+                          onClick={this.setChip.bind(this, 'indicatorsView')}
+                        />
+                      </ChipContainer>
+                      </Tooltip>
+                    </div> */}
                   </div>
-                  <div style={{ paddingLeft: '.5vw' }}>
-                    <Tooltip title="Veja os detalhes da situação de cada aluno" arrow>
-                      <Chip
-                        label='Alunos'
-                        style={{ fontFamily: 'Avenir, sans-serif', fontSize: '15px' }}
-                        className={chipSelected === 'studentsView' ? 'active-chip' : 'inactive-chip'}
-                        onClick={this.setChip.bind(this, 'studentsView')}
-                      />
-                    </Tooltip>
+                </Header>
+              </FullContainer>
+              {chipSelected === 'studentsView' ? 
+              <div>
+                <FullContainer>
+                  <div style={{ width: '25%', margin: '5px 10px' }}>
+                    <SelectText style={{ color: 'white',  fontFamily: 'Avenir, sans-serif', fontSize: '14px' }}>Aluno</SelectText>
+                    <SelectContainer style={{ paddingBottom: '0px' }}>
+                      <Select
+                        value={choosedStudent}
+                        onChange={this.handleStudentChange}
+                        placeholder={'Selecione o aluno'}
+                        styles={selectStyle}
+                        options={studentOptions} />
+                    </SelectContainer>
                   </div>
-                  <div style={{ paddingLeft: '.5vw' }}>
-                    <Tooltip title="Veja as informações dos atributos dos alunos no AVA" arrow>
-                      <Chip
-                        label='Indicadores'
-                        style={{ fontFamily: 'Avenir, sans-serif', fontSize: '15px' }}
-                        className={chipSelected === 'indicatorsView' ? 'active-chip' : 'inactive-chip'}
-                        onClick={this.setChip.bind(this, 'indicatorsView')}
-                      />
-                    </Tooltip>
+                  <div style={{ width: '75%', margin: '5px 10px' }}>
+                    <SelectText style={{ color: 'white',  fontFamily: 'Avenir, sans-serif', fontSize: '14px' }}>Indicadores</SelectText>
+                    <SelectContainer style={{ paddingBottom: '0px' }}>
+                      <Select
+                        isMulti
+                        value={choosedVariable}
+                        onChange={this.handleVariableChange}
+                        placeholder={'Selecione os indicadores'}
+                        styles={selectStyle}
+                        options={variableOptions} />
+                    </SelectContainer>
                   </div>
-                </div>
-              </Header>
-            </FullContainer>
+                </FullContainer>
+              </div> : null}
+            </div>
 
             {chipSelected === 'overallView' ? 
             <div>
@@ -1490,6 +1682,26 @@ class Dashboard extends Component {
             </div> : null}
 
             {chipSelected === 'studentsView' ? 
+            <div style={{ width: '100%', display: 'flex', padding: '10px' }}>
+              {choosedStudent && choosedVariable && !loadingChart ?
+              <div style={{ width: '70%',  margin: '0 10px', textAlign: 'center', background: 'white' }}>
+                <Plot
+                  data={
+                    detailedChartData
+                  }
+                  layout={
+                    detailedChartLayout
+                  }
+                  config={config}
+                  graphDiv="graph"
+                />
+              </div>
+              : null }
+              {this.renderStudentCards(choosedStudent.label, predictionInfoText)}
+            </div>
+            : null}
+
+            {/* {chipSelected === 'indicatorsView' ? 
             <div>
               <FullContainer>
                 <HalfContent style={{ backgroundColor: 'white', borderRadius: '5px' }}>
@@ -1522,42 +1734,7 @@ class Dashboard extends Component {
                   />
                 </HalfContent>
               </FullContainer>
-            </div> : null}
-
-            {chipSelected === 'indicatorsView' ? 
-            <div>
-              <FullContainer>
-                <HalfContent style={{ backgroundColor: 'white', borderRadius: '5px' }}>
-                  <Plot
-                    data={
-                      this.getChartDataDynamically('satisfactoryAndUnsatisfactory')
-                    }
-                    layout={
-                      this.getChartLayoutDynamically('satisfactoryAndUnsatisfactory')
-                    }
-                    config={
-                      config
-                    }
-                    graphDiv='graph'
-                  />
-                </HalfContent>
-
-                <HalfContent style={{ backgroundColor: 'white', borderRadius: '5px' }}>
-                  <Plot
-                    data={
-                      this.getChartDataDynamically('satisfactoryAndUnsatisfactory')
-                    }
-                    layout={
-                      this.getChartLayoutDynamically('satisfactoryAndUnsatisfactory')
-                    }
-                    config={
-                      config
-                    }
-                    graphDiv='graph'
-                  />
-                </HalfContent>
-              </FullContainer>
-            </div> : null}
+            </div> : null} */}
 
             {/* <Content>
               {prediction.data ?

@@ -1,5 +1,25 @@
 import styled from 'styled-components';
 
+export const Item = styled.button`
+  border: 0;
+  background: transparent;
+`;
+
+export const ChipContainer = styled.div`
+  span {
+    font-family: Avenir, sans-serif;
+    font-size: 15px;
+  }
+`;
+
+export const CardContainer = styled.div`
+  margin: 5px 10px;
+  display: flex;
+  flex-wrap: wrap;
+  /* background: white;
+  border-radius: 5px; */
+`;
+
 export const MainContainer = styled.div`
   width: 100%;
   min-height: 100%;
@@ -56,7 +76,7 @@ export const FullContainer = styled.div`
     font-weight: 600;
     font-size: 24px;
     line-height: 31px;
-    color: #4A5173;
+    color: white;
   }
 `;
 

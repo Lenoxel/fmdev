@@ -101,17 +101,28 @@ export default createGlobalStyle`
 
   .active-chip {
     padding-left: .4vw !important;
-    font-family: ${fontFamily} !important;
     color: #FFF !important;
     background-color: ${primaryColor} !important;
-    }
+  }
 
   .inactive-chip {
     padding-left: .4vw !important;
     color: ${primaryColor} !important;
-    font-family: ${fontFamily} !important;
     background-color: transparent !important;
     border: .8px solid ${primaryColor} !important;
+  }
+
+  .active-chip-lad {
+    padding-left: .4vw !important;
+    color: white !important;
+    background-color: ${primaryColor} !important;
+  }
+
+  .inactive-chip-lad {
+    padding-left: .4vw !important;
+    color: white !important;
+    background-color: transparent !important;
+    border: .8px solid white !important;
   }
 
   .lms-card {
