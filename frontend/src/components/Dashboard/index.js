@@ -134,7 +134,7 @@ class Dashboard extends Component {
       'var34': 'Número total de mensagens postadas pelo aluno nos fóruns.',
       'var35': 'Número de respostas de um professor para perguntas do aluno em fóruns.',
     },
-    chipSelected: 'overallView'
+    chipSelected: 'overallView',
   }
 
   componentDidMount() {
@@ -380,8 +380,8 @@ class Dashboard extends Component {
 
     let variableOptions = [
       {
-      label: 'Todas',
-      value: 'Todas'
+      label: 'Todos',
+      value: 'Todos'
       }
     ];
 
@@ -489,6 +489,135 @@ class Dashboard extends Component {
     }
   }
 
+  getDescriptiveAnalysisByStudentAndClass = (studentId) => {
+    const { prediction } = this.props;
+
+    let currentAssessments = prediction.data.assessmentVariables;
+
+    let availableGrades = [];
+    let availableForums = [];
+    let availableWebquests = [];
+    let studentGrade;
+    let studentForum;
+    let studentWebquest;
+
+    let webquestText;
+    let forumText;
+    let gradeText;
+
+    for (const currentAssessment of currentAssessments) {
+      if (currentAssessment['media_webquest'] > 0) {
+        availableWebquests.push(currentAssessment['media_webquest']);
+      } else if (currentAssessment['webquest01'] > 0) {
+        availableWebquests.push(currentAssessment['webquest01']);
+      } else {
+        availableWebquests.push(0);
+      }
+
+      if (currentAssessment['media_forum'] > 0) {
+        availableForums.push(currentAssessment['media_forum']);
+      } else if (currentAssessment['forum04'] > 0) {
+        const currentForumMean = ((currentAssessment['forum04'] + currentAssessment['forum03'] + currentAssessment['forum02'] + currentAssessment['forum01']) / 4).toFixed(2);
+        availableForums.push(currentForumMean);
+      } else if (currentAssessment['forum03'] > 0) {
+        const currentForumMean = ((currentAssessment['forum03'] + currentAssessment['forum02'] + currentAssessment['forum01']) / 3).toFixed(2);
+        availableForums.push(currentForumMean);
+      } else if (currentAssessment['forum02'] > 0) {
+        const currentForumMean = ((currentAssessment['forum02'] + currentAssessment['forum01']) / 2).toFixed(2);
+        availableForums.push(currentForumMean);
+      } else if (currentAssessment['forum01'] > 0) {
+        const currentForumMean = currentAssessment['forum01'].toFixed(2);
+        availableForums.push(currentForumMean);
+      } else {
+        availableForums.push(0);
+      }
+
+      if (currentAssessment['media_provas'] > 0) {
+        availableGrades.push(currentAssessment['media_provas']);
+      } else if (currentAssessment['primeira_prova'] > 0) {
+        availableGrades.push(currentAssessment['primeira_prova']);
+      } else {
+        availableGrades.push(0);
+      }
+
+      if (currentAssessment['id_do_aluno'] === studentId) {
+        studentForum = availableForums[availableForums.length - 1].toFixed(2);
+        studentWebquest = availableWebquests[availableWebquests.length - 1].toFixed(2);
+        studentGrade = availableGrades[availableGrades.length - 1].toFixed(2);
+      }
+    }
+
+    let mappedMoreThenZeroWebquest = currentAssessments.filter(currentAssessment => currentAssessment['media_webquest'] > 0);
+    if (mappedMoreThenZeroWebquest.length) {
+      webquestText = 'Média dos webquests:';
+    } else {
+      mappedMoreThenZeroWebquest = currentAssessments.filter(currentAssessment => currentAssessment['webquest01'] > 0);
+      if (mappedMoreThenZeroWebquest.length) {
+        webquestText = 'Primeiro webquest:';
+      }
+    }
+
+    let mappedMoreThenZeroForum = currentAssessments.filter(currentAssessment => currentAssessment['media_forum'] > 0);
+    if (mappedMoreThenZeroForum.length) {
+      forumText = 'Média dos fóruns:';
+    } else {
+      mappedMoreThenZeroForum = currentAssessments.filter(currentAssessment => currentAssessment['forum04'] > 0);
+      if (mappedMoreThenZeroForum.length) {
+        forumText = 'Média de quatro fóruns:';
+      } else {
+        mappedMoreThenZeroForum = currentAssessments.filter(currentAssessment => currentAssessment['forum03'] > 0);
+        if (mappedMoreThenZeroForum.length) {
+          forumText = 'Média de três fóruns:';
+        } else {
+          mappedMoreThenZeroForum = currentAssessments.filter(currentAssessment => currentAssessment['forum02'] > 0);
+          if (mappedMoreThenZeroForum.length) {
+            forumText = 'Média de dois fóruns:';
+          } else {
+            mappedMoreThenZeroForum = currentAssessments.filter(currentAssessment => currentAssessment['forum01'] > 0);
+            if (mappedMoreThenZeroForum.length) {
+              forumText = 'Primeiro fórum:';
+            }
+          }
+        }
+      }
+    }
+
+    let mappedMoreThenZeroGrades = currentAssessments.filter(currentAssessment => currentAssessment['media_provas'] > 0);
+    if (mappedMoreThenZeroGrades.length) {
+      gradeText = 'Média das provas:';
+    } else {
+      mappedMoreThenZeroGrades = currentAssessments.filter(currentAssessment => currentAssessment['primeira_prova'] > 0);
+      if (mappedMoreThenZeroGrades.length) {
+        gradeText = 'Primeira prova:';
+      }
+    }
+
+    const reducer = (accumulator, currentValue) => accumulator + currentValue;
+
+    const classGradeSum = availableGrades.reduce(reducer);
+    const classGradeAverage = (classGradeSum / availableGrades.length).toFixed(2);
+
+    const classWebquestSum = availableWebquests.reduce(reducer);
+    const classWebquestAverage = (classWebquestSum / availableWebquests.length).toFixed(2);
+
+    const classForumSum = availableForums.reduce(reducer);
+    const classForumAverage = (classForumSum / availableForums.length).toFixed(2);
+
+    const descriptiveAnalysisObject = {
+      studentGrade,
+      classGradeAverage,
+      studentWebquest,
+      classWebquestAverage,
+      studentForum,
+      classForumAverage,
+      webquestText,
+      forumText,
+      gradeText,
+    };
+
+    return descriptiveAnalysisObject;
+  }
+
   makeDetailedChartByStudent = (choosedDontKnow, changingWhat, choosedVariableFromInit) => {
     const { 
       choosedStudent, choosedVariable, mappedVariablesMeaning
@@ -527,14 +656,14 @@ class Dashboard extends Component {
     let yValueVariableValues = [];
     let textList = [];
 
-    if (updatedChoosedVariables[updatedChoosedVariables.length-1].value === 'Todas') {
+    if (updatedChoosedVariables[updatedChoosedVariables.length-1].value === 'Todos') {
+      if (changingWhat === 'changingVariable') {
+        choosedDontKnow = [updatedChoosedVariables[updatedChoosedVariables.length-1]];
+      }
       let variableOptions = this.getVariablesDynamically();
       variableOptions.shift();
       updatedChoosedVariables = variableOptions;
-      if (changingWhat === 'changingVariable') {
-        choosedDontKnow = variableOptions;
-      }
-    } else if (updatedChoosedVariables[0].value === 'Todas' && updatedChoosedVariables.length > 1) {
+    } else if (updatedChoosedVariables[0].value === 'Todos' && updatedChoosedVariables.length > 1) {
       updatedChoosedVariables.shift();
       if (changingWhat === 'changingVariable') {
         choosedDontKnow = updatedChoosedVariables;
@@ -1347,7 +1476,21 @@ class Dashboard extends Component {
 
     let countZeros = prediction.data.countDisapproved;
     let countOnes = prediction.data.countApproved;
-    
+
+    const descriptiveAnalysisObject = this.getDescriptiveAnalysisByStudentAndClass(choosedStudent.value);
+
+    const {
+      studentGrade,
+      classGradeAverage,
+      studentWebquest,
+      classWebquestAverage,
+      studentForum,
+      classForumAverage,
+      webquestText,
+      forumText,
+      gradeText,
+    } = descriptiveAnalysisObject;
+
     return (
       <CardContainer style={{ display: 'flex', flexDirection: 'column', width: '30%', margin: '0 10px' }}>
         <Card variant="outlined" style={{ minWidth: '320px', marginBottom: '10px' }}>
@@ -1360,7 +1503,7 @@ class Dashboard extends Component {
             </Typography>
             <Typography variant="body2" color="textSecondary" component="p" style={{ color: 'green', fontFamily: 'Avenir, sans-serif', fontSize: '15px' }}>
               {predictionInfoText === 'Aprovado' ?
-                <span><strong>{choosedStudent}</strong> + {countOnes-1} alunos</span>
+                <span><strong>{choosedStudent.label}</strong> + {countOnes-1} alunos</span>
               : <span>{countOnes} alunos</span>
               }
             </Typography>
@@ -1370,7 +1513,7 @@ class Dashboard extends Component {
             </Typography>
             <Typography variant="body2" color="textSecondary" component="p" style={{ color: 'red', fontFamily: 'Avenir, sans-serif', fontSize: '15px' }}>
               {predictionInfoText === 'Reprovado' ?
-                <span><strong>{choosedStudent}</strong> + {countZeros-1} alunos</span>
+                <span><strong>{choosedStudent.label}</strong> + {countZeros-1} alunos</span>
               : <span>{countZeros} alunos</span>
               }
             </Typography>
@@ -1380,43 +1523,59 @@ class Dashboard extends Component {
           <Typography gutterBottom variant="h5" component="div" style={{ color: 'white', fontFamily: 'Avenir, sans-serif', backgroundColor: 'rgb(81, 201, 245)', minHeight: '50px', justifyContent: 'center', display: 'flex' }}>
             <span style={{ alignSelf: 'center' }}>Análise Descritiva</span>
           </Typography>
+          {gradeText || webquestText || forumText ?
           <CardContent>
             <div style={{ border: '5px aliceblue', borderStyle: 'outset', borderRadius: '10px', padding: '5px' }}>
               <Typography gutterBottom variant="h5" component="h2" style={{ color: 'black', fontFamily: 'Avenir, sans-serif' }}>
-                Notas do aluno
+                Avaliações do aluno
               </Typography>
-              <Typography variant="body2" color="textSecondary" component="p" style={{ color: 'black', fontFamily: 'Avenir, sans-serif', fontSize: '15px' }}>
-                Média de 2 notas: 5.5
-              </Typography>
-              <Typography variant="body2" color="textSecondary" component="p" style={{ color: 'black', fontFamily: 'Avenir, sans-serif', fontSize: '15px' }}>
-                Média de 4 webquests: 2.0
-              </Typography>
-              <Typography variant="body2" color="textSecondary" component="p" style={{ color: 'black', fontFamily: 'Avenir, sans-serif', fontSize: '15px' }}>
-                Média de 2 fóruns: 2.5
-              </Typography>
+              { gradeText ? <Typography variant="body2" color="textSecondary" component="p" style={{ color: 'black', fontFamily: 'Avenir, sans-serif', fontSize: '15px' }}>
+                <span>{gradeText} {studentGrade}</span>
+              </Typography> : null }
+              { webquestText ? <Typography variant="body2" color="textSecondary" component="p" style={{ color: 'black', fontFamily: 'Avenir, sans-serif', fontSize: '15px' }}>
+                <span>{webquestText} {studentWebquest}</span>
+              </Typography> : null }
+              { forumText ? <Typography variant="body2" color="textSecondary" component="p" style={{ color: 'black', fontFamily: 'Avenir, sans-serif', fontSize: '15px' }}>
+                <span>{forumText} {studentForum}</span>
+              </Typography> : null }
             </div>
           </CardContent>
+          : 
+          <div style={{ padding: '5px' }}>
+            <Typography gutterBottom variant="h5" component="h2" style={{ color: 'black', fontFamily: 'Avenir, sans-serif' }}>
+              O aluno não possui avaliações
+            </Typography>
+          </div>
+          }
         </Card>
         <Card variant="outlined" style={{ minWidth: '320px' }}>
           <Typography gutterBottom variant="h5" component="div" style={{ color: 'white', fontFamily: 'Avenir, sans-serif', backgroundColor: 'rgb(81, 201, 245)', minHeight: '50px', justifyContent: 'center', display: 'flex' }}>
             <span style={{ alignSelf: 'center' }}>Análise Descritiva</span>
           </Typography>
+          {gradeText || webquestText || forumText ?
           <CardContent>
             <div style={{ border: '5px aliceblue', borderStyle: 'outset', borderRadius: '10px', padding: '5px' }}>
               <Typography gutterBottom variant="h5" component="h2" style={{ color: 'black', fontFamily: 'Avenir, sans-serif' }}>
                 Média da turma
               </Typography>
-              <Typography variant="body2" color="textSecondary" component="p" style={{ color: 'black', fontFamily: 'Avenir, sans-serif', fontSize: '15px' }}>
-                Média de 2 notas: 3.7
-              </Typography>
-              <Typography variant="body2" color="textSecondary" component="p" style={{ color: 'black', fontFamily: 'Avenir, sans-serif', fontSize: '15px' }}>
-                Média de 4 webquests: 1.0
-              </Typography>
-              <Typography variant="body2" color="textSecondary" component="p" style={{ color: 'black', fontFamily: 'Avenir, sans-serif', fontSize: '15px' }}>
-                Média de 2 fóruns: 1.5
-              </Typography>
+              { gradeText ? <Typography variant="body2" color="textSecondary" component="p" style={{ color: 'black', fontFamily: 'Avenir, sans-serif', fontSize: '15px' }}>
+                <span>{gradeText} {classGradeAverage}</span>
+              </Typography> : null }
+              { webquestText ? <Typography variant="body2" color="textSecondary" component="p" style={{ color: 'black', fontFamily: 'Avenir, sans-serif', fontSize: '15px' }}>
+                <span>{webquestText} {classWebquestAverage}</span>
+              </Typography> : null }
+              { forumText ? <Typography variant="body2" color="textSecondary" component="p" style={{ color: 'black', fontFamily: 'Avenir, sans-serif', fontSize: '15px' }}>
+                <span>{forumText} {classForumAverage}</span>
+              </Typography> : null }
             </div>
           </CardContent>
+          : 
+          <div style={{ padding: '5px' }}>
+            <Typography gutterBottom variant="h5" component="h2" style={{ color: 'black', fontFamily: 'Avenir, sans-serif' }}>
+              A turma não possui avaliações
+            </Typography>
+          </div>
+          }
         </Card>
       </CardContainer>
     )
@@ -1697,7 +1856,7 @@ class Dashboard extends Component {
                 />
               </div>
               : null }
-              {this.renderStudentCards(choosedStudent.label, predictionInfoText)}
+              {this.renderStudentCards(choosedStudent, predictionInfoText)}
             </div>
             : null}
 
