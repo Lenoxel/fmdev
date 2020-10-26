@@ -350,8 +350,8 @@ class Dashboard extends Component {
         choosedVariable,
       });
 
-      this.handleVariableChange(choosedVariable);
-      this.handleStudentChange(choosedStudent, choosedVariable);
+      this.handleStudentChange(choosedStudent);
+      this.handleVariableChange(choosedVariable, choosedStudent);
     }
   }
 
@@ -391,7 +391,7 @@ class Dashboard extends Component {
       variables.forEach(variable => {
         if (variable !== 'nome_do_aluno' && variable !== 'id_do_aluno') {
           const variableOption = {
-            label: mappedVariablesMeaning[variable] || variable,
+            label: `${variable} - ${mappedVariablesMeaning[variable]}` || variable,
             value: variable,
           }
     
@@ -429,19 +429,19 @@ class Dashboard extends Component {
     }
   }
 
-  handleStudentChange = (event, choosedVariableFromInit) => {
+  handleStudentChange = (event) => {
     if (event && (event.value || event.length)) {
       const { 
         choosedVariable, choosedDetailed
       } = this.state;
       
-      if (choosedVariable || choosedVariableFromInit) {
+      if (choosedVariable) {
         this.setState({
           loadingChart: true,
         });
 
         if (choosedDetailed.value === 'byStudent') {
-          this.makeDetailedChartByStudent(event, 'changingStudent', choosedVariableFromInit);
+          this.makeDetailedChartByStudent(event, 'changingStudent');
         } else if (choosedDetailed.value === 'byVariable') {
           this.makeDetailedChartByVariable(event, 'changingStudent');
         }
@@ -459,19 +459,19 @@ class Dashboard extends Component {
     }
   }
 
-  handleVariableChange = (event) => {
+  handleVariableChange = (event, choosedStudentFromInit) => {
     if (event && (event.value || event.length)) {
       const { 
         choosedStudent, choosedDetailed
       } = this.state;
       
-      if (choosedStudent) {
+      if (choosedStudent || (event && event.length && event[0].value === 'Todos' )) {
         this.setState({
           loadingChart: true,
         });
         
         if (choosedDetailed.value === 'byStudent') {
-          this.makeDetailedChartByStudent(event, 'changingVariable');
+          this.makeDetailedChartByStudent(event, 'changingVariable', choosedStudentFromInit);
         } else if (choosedDetailed.value === 'byVariable') {
           this.makeDetailedChartByVariable(event, 'changingVariable');
         }
@@ -483,8 +483,7 @@ class Dashboard extends Component {
       }
     } else {
       this.setState({ 
-        choosedVariable: event,
-        predictionInfoText: null,
+        choosedVariable: null,
       });
     }
   }
@@ -618,7 +617,7 @@ class Dashboard extends Component {
     return descriptiveAnalysisObject;
   }
 
-  makeDetailedChartByStudent = (choosedDontKnow, changingWhat, choosedVariableFromInit) => {
+  makeDetailedChartByStudent = (choosedDontKnow, changingWhat, choosedStudentFromInit) => {
     const { 
       choosedStudent, choosedVariable, mappedVariablesMeaning
     } = this.state;
@@ -626,14 +625,16 @@ class Dashboard extends Component {
     let updatedChoosedStudent;
     let updatedChoosedVariables;
     let predictionInfoText;
+    let studentPredictionResult;
     let choosedStudentVariablesLabelAndValue;
+    let choosedClassMeanVariablesLabelAndValueList = [];
 
     // Essa verificação é importantíssima, pois o estudante pode estar sendo modificado nesse exato momento, logo ele ainda não foi modificado no state.
     if (changingWhat === 'changingStudent') {
       updatedChoosedStudent = choosedDontKnow;
-      updatedChoosedVariables = choosedVariable ? choosedVariable : choosedVariableFromInit;
+      updatedChoosedVariables = choosedVariable;
     } else {
-      updatedChoosedStudent = choosedStudent;
+      updatedChoosedStudent = choosedStudent ? choosedStudent : choosedStudentFromInit;
       updatedChoosedVariables = choosedDontKnow;
     }
 
@@ -642,10 +643,23 @@ class Dashboard extends Component {
     for (const [index, uniqueRealData] of prediction.data.realData.entries()) {
       if (uniqueRealData.id_do_aluno === updatedChoosedStudent.value) {
         choosedStudentVariablesLabelAndValue = Object.assign({}, uniqueRealData);
-        const studentPredictionResult = prediction.data.predictedData[index];
+        studentPredictionResult = prediction.data.predictedData[index];
         predictionInfoText = studentPredictionResult === 0 ? 'Reprovado' : 'Aprovado';
-      }
+      } 
     }
+
+    for (const [index, uniqueRealData] of prediction.data.realData.entries()) {
+      if (uniqueRealData.id_do_aluno !== updatedChoosedStudent.value) {
+        const currentClassStudentVariablesLabelAndValue = Object.assign({}, uniqueRealData);
+        const currentStudentPredictionResult = prediction.data.predictedData[index];
+
+        if (currentStudentPredictionResult !== studentPredictionResult) {
+          choosedClassMeanVariablesLabelAndValueList.push(currentClassStudentVariablesLabelAndValue);
+        }
+      } 
+    }
+
+    const title = predictionInfoText === 'Aprovado' ? 'Indicadores do Aluno x Médias dos Insatisfatórios' : 'Indicadores do Aluno x Médias dos Satisfatórios';
 
     // const choosedStudentVariablesLabelAndValue = prediction.data.realData.find(uniqueRealData => uniqueRealData.id_do_aluno === updatedChoosedStudent.value);
 
@@ -653,16 +667,17 @@ class Dashboard extends Component {
     let variableValues = Object.values(choosedStudentVariablesLabelAndValue);
 
     let xValueVariableNames = [];
-    let yValueVariableValues = [];
+    let yValueVariableValuesStudent = [];
+    let yValueVariableValuesClassMean = [];
     let textList = [];
 
     if (updatedChoosedVariables[updatedChoosedVariables.length-1].value === 'Todos') {
-      if (changingWhat === 'changingVariable') {
-        choosedDontKnow = [updatedChoosedVariables[updatedChoosedVariables.length-1]];
-      }
       let variableOptions = this.getVariablesDynamically();
       variableOptions.shift();
       updatedChoosedVariables = variableOptions;
+      if (changingWhat === 'changingVariable') {
+        choosedDontKnow = updatedChoosedVariables;
+      }
     } else if (updatedChoosedVariables[0].value === 'Todos' && updatedChoosedVariables.length > 1) {
       updatedChoosedVariables.shift();
       if (changingWhat === 'changingVariable') {
@@ -670,37 +685,58 @@ class Dashboard extends Component {
       }
     }
 
+    const reducer = (accumulator, currentValue) => accumulator + currentValue;
+
     for (const [index, variableName] of variableNames.entries()) {
       const searchedVariableOption = updatedChoosedVariables.find(variableOption => variableOption.value === variableName);
 
       if (searchedVariableOption) {
         xValueVariableNames.push(variableName);
         textList.push(mappedVariablesMeaning[variableName]);
-        yValueVariableValues.push(variableValues[index]);
+        yValueVariableValuesStudent.push(variableValues[index]);
+
+        const searchedVariableOptionFromClass = choosedClassMeanVariablesLabelAndValueList.map(studentInfo => studentInfo[variableName]);
+        
+        const classSearchedVariableSum = searchedVariableOptionFromClass.reduce(reducer);
+        const classSearchedVariableAverage = (classSearchedVariableSum / searchedVariableOptionFromClass.length).toFixed(2);
+
+        yValueVariableValuesClassMean.push(classSearchedVariableAverage);
       }
     }
 
-    const chartInfo = {
+    const chartStudentInfo = {
       x: xValueVariableNames,
-      y: yValueVariableValues,
+      y: yValueVariableValuesStudent,
       type: 'bar',
       text: textList,
+      name: 'Aluno',
       // textposition: 'auto',
       marker: {
         color: 'rgb(74,81,115)'
       }
     };
-    
-    const detailedChartData = [chartInfo];
+
+    const chartClassMeanInfo = {
+      x: xValueVariableNames,
+      y: yValueVariableValuesClassMean,
+      type: 'bar',
+      text: textList,
+      name: studentPredictionResult === 1 ? 'Insatisfatório' : 'Satisfatório',
+      // textposition: 'auto',
+      marker: {
+        color: studentPredictionResult === 1 ? 'red' : 'green',
+      }
+    };
+
+    const detailedChartData = [chartStudentInfo, chartClassMeanInfo];
 
     const detailedChartLayout = {
-      title: 'Indicadores do aluno x Média dos aprovados x Médias dos reprovados',
+      title,
       width: 750, 
       height: 500,
       // font:{
       //   family: 'Raleway, sans-serif'  
       // },
-      showlegend: false,
       xaxis: {
         title: 'Indicadores',
       },
@@ -711,7 +747,14 @@ class Dashboard extends Component {
         family: 'Avenir, sans-serif',
         size: 14,
       },
-      bargap: 0.05
+      barmode: 'group',
+      bargap: 0.15,
+      showlegend: true,
+      legend: {
+        x: 1,
+        xanchor: 'right',
+        y: 1
+      }
     };
 
     if (changingWhat === 'changingVariable') {
@@ -1015,7 +1058,7 @@ class Dashboard extends Component {
 
       availableGradeTexts = availableGrades.map((availableGrade, index) => {
         const currentStudentName = currentAssessments[index]['nome_do_aluno'];
-        return `${currentStudentName}<br>Nota da prova: ${availableGrade}`;
+        return `${currentStudentName}<br>Média das Provas: ${availableGrade}`;
       });
 
       const trace = {
@@ -1066,8 +1109,8 @@ class Dashboard extends Component {
       let titleY;
 
       if (mappedMoreThenZeroWebquest.length && mappedMoreThenZeroForum.length) {
-        titleX = 'Nota do Fórum';
-        titleY = 'Nota do Webquest';
+        titleX = 'Média dos Fóruns';
+        titleY = 'Média dos Webquests';
         
         const minXaxis = Math.min(...availableForums);
         const maxXaxis =  Math.max(...availableForums);
@@ -1077,8 +1120,8 @@ class Dashboard extends Component {
         data = this.makeScatterChart(satisfactoryWebquest, unsatisfactoryWebquest, satisfactoryForum, unsatisfactoryForum);
         layout = this.makeScatterLayout(titleX, minXaxis, maxXaxis, titleY, minYaxis, maxYaxis);
       } else if (mappedMoreThenZeroWebquest.length && mappedMoreThenZeroGrades.length) {
-        titleX = 'Nota da Prova';
-        titleY = 'Nota do Webquest';
+        titleX = 'Média das Provas';
+        titleY = 'Média dos Webquests';
 
         const minXaxis = Math.min(...availableGrades);
         const maxXaxis =  Math.max(...availableGrades);
@@ -1088,8 +1131,8 @@ class Dashboard extends Component {
         data = this.makeScatterChart(satisfactoryWebquest, unsatisfactoryWebquest, satisfactoryGrade, unsatisfactoryGrade);
         layout = this.makeScatterLayout(titleX, minXaxis, maxXaxis, titleY, minYaxis, maxYaxis);
       } else if (mappedMoreThenZeroForum.length && mappedMoreThenZeroGrades.length) {
-        titleX = 'Nota do Fórum';
-        titleY = 'Nota da Prova';
+        titleX = 'Média dos Fóruns';
+        titleY = 'Média das Provas';
 
         const minXaxis = Math.min(...availableForums);
         const maxXaxis =  Math.max(...availableForums);
@@ -1125,20 +1168,20 @@ class Dashboard extends Component {
       let titleY;
 
       if (mappedMoreThenZeroWebquest.length) {
-        titleX = 'Nota do Webquest';
-        titleY = 'Quantidade';
+        titleX = 'Alunos';
+        titleY = 'Média dos Webquests';
 
         data = this.makeHistogramChart(satisfactoryWebquest, unsatisfactoryWebquest);
         layout = this.makeHistogramLayout(titleX, titleY);
       } else if (mappedMoreThenZeroGrades.length) {
-        titleX = 'Nota da Prova';
-        titleY = 'Quantidade';
+        titleX = 'Alunos';
+        titleY = 'Média das Provas';
 
         data = this.makeHistogramChart(satisfactoryGrade, unsatisfactoryGrade);
         layout = this.makeHistogramLayout(titleX, titleY);
       } else if (mappedMoreThenZeroForum.length) {
-        titleX = 'Nota da Prova';
-        titleY = 'Quantidade';
+        titleX = 'Alunos';
+        titleY = 'Média dos Fóruns';
 
         data = this.makeHistogramChart(satisfactoryForum, unsatisfactoryForum);
         layout = this.makeHistogramLayout(titleX, titleY);
@@ -1169,8 +1212,9 @@ class Dashboard extends Component {
 
   makeHistogramChart = (satisfactoryIndicator, unsatisfactoryIndicator) => {
     const firstTrace = {
-      x: satisfactoryIndicator,
-      type: 'histogram',
+      y: satisfactoryIndicator,
+      type: 'box',
+      name: 'Satisfatório',
       opacity: 0.5,
       marker: {
         color: 'green',
@@ -1178,8 +1222,9 @@ class Dashboard extends Component {
     };
 
     const secondTrace = {
-      x: unsatisfactoryIndicator,
-      type: 'histogram',
+      y: unsatisfactoryIndicator,
+      type: 'box',
+      name: 'Insatisfatório',
       opacity: 0.6,
       marker: {
         color: 'red',
@@ -1195,7 +1240,6 @@ class Dashboard extends Component {
     const layout = {
       width: 1000, 
       height: 600,
-      barmode: "overlay",
       xaxis: {
         title: titleX,
       },
@@ -1278,10 +1322,10 @@ class Dashboard extends Component {
         size: 14,
       },
       xaxis: {
-        title: 'Nota do Fórum',
+        title: 'Média dos Fóruns',
       },
       yaxis: {
-        title: 'Nota do Webquest',
+        title: 'Média dos Webquests',
       },
     };
 
@@ -1477,6 +1521,10 @@ class Dashboard extends Component {
     let countZeros = prediction.data.countDisapproved;
     let countOnes = prediction.data.countApproved;
 
+    const { 
+      choosedVariable,
+    } = this.state;
+
     const descriptiveAnalysisObject = this.getDescriptiveAnalysisByStudentAndClass(choosedStudent.value);
 
     const {
@@ -1492,7 +1540,7 @@ class Dashboard extends Component {
     } = descriptiveAnalysisObject;
 
     return (
-      <CardContainer style={{ display: 'flex', flexDirection: 'column', width: '30%', margin: '0 10px' }}>
+      <CardContainer style={{ display: 'flex', flexDirection: choosedVariable && choosedVariable.length ? 'column' : null, width: choosedVariable && choosedVariable.length ? '30%' : '100%', justifyContent: choosedVariable && choosedVariable.length ? null : 'space-between', margin: '0 10px' }}>
         <Card variant="outlined" style={{ minWidth: '320px', marginBottom: '10px' }}>
           <Typography gutterBottom variant="h5" component="div" style={{ color: 'white', fontFamily: 'Avenir, sans-serif', backgroundColor: 'rgb(81, 201, 245)', minHeight: '50px', justifyContent: 'center', display: 'flex' }}>
             <span style={{ alignSelf: 'center' }}>Análise Preditiva</span>
@@ -1521,7 +1569,7 @@ class Dashboard extends Component {
         </Card>
         <Card variant="outlined" style={{ minWidth: '320px', marginBottom: '10px' }}>
           <Typography gutterBottom variant="h5" component="div" style={{ color: 'white', fontFamily: 'Avenir, sans-serif', backgroundColor: 'rgb(81, 201, 245)', minHeight: '50px', justifyContent: 'center', display: 'flex' }}>
-            <span style={{ alignSelf: 'center' }}>Análise Descritiva</span>
+            <span style={{ alignSelf: 'center' }}>Análise Descritiva do Aluno</span>
           </Typography>
           {gradeText || webquestText || forumText ?
           <CardContent>
@@ -1548,9 +1596,9 @@ class Dashboard extends Component {
           </div>
           }
         </Card>
-        <Card variant="outlined" style={{ minWidth: '320px' }}>
+        <Card variant="outlined" style={{ minWidth: '320px', marginBottom: '10px' }}>
           <Typography gutterBottom variant="h5" component="div" style={{ color: 'white', fontFamily: 'Avenir, sans-serif', backgroundColor: 'rgb(81, 201, 245)', minHeight: '50px', justifyContent: 'center', display: 'flex' }}>
-            <span style={{ alignSelf: 'center' }}>Análise Descritiva</span>
+            <span style={{ alignSelf: 'center' }}>Análise Descritiva da Turma</span>
           </Typography>
           {gradeText || webquestText || forumText ?
           <CardContent>
